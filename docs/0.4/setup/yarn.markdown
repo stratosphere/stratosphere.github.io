@@ -115,11 +115,11 @@ Use the *run* action to submit a job to YARN. The uberjar will show you the addr
 
 ```bash
 # Optionally download some sample data first
-wget -O hamlet.txt http://www.gutenberg.org/cache/epub/1787/pg1787.txt
+wget -O apache-license-v2.txt http://www.apache.org/licenses/LICENSE-2.0.txt
 # Submit Job to Stratosphere
 ./bin/stratosphere run -m localhost:6123 \
                        -j ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
-                       -a 1 file://`pwd`/hamlet.txt file://`pwd`/wordcount-result.txt 
+                       -a 1 file://`pwd`/apache-license-v2.txt file://`pwd`/wordcount-result.txt 
 ```
 
 You can use also script without the `-m` (or `--jobmanager`) argument, but you have to configure the `stratosphere-conf.yaml` with the correct JobManager details.
