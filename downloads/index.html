@@ -122,13 +122,19 @@ vagrant ssh
         </div>
         <p class="lead">We have also prepared a Debian repository for Debian/Ubuntu systems.</p>
 {% highlight bash %}
-# vim /etc/apt/sources.list.d/stratosphere.list
-deb http://dev.stratosphere.eu/apt/ ./
+sudo vim /etc/apt/sources.list.d/stratosphere.list
+# deb http://dev.stratosphere.eu/apt/ ./
 wget -q http://dev.stratosphere.eu/apt/stratosphere.gpg -O- | sudo apt-key add -
-# apt-get update
-apt-get install stratosphere-dist
+sudo apt-get update
+sudo apt-get install stratosphere-dist
 {% endhighlight %}
         </p>
+        <p>To start the services run:</p>
+{% highlight bash %}
+sudo service taskmanager start
+sudo service jobmanager  start
+{% endhighlight %}
+    </p>
     </section>
 
     <section id="source">
