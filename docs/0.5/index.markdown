@@ -5,6 +5,7 @@ links:
   - { anchor: "jdbc", title: "JDBC Input/Output Format" }
   - { anchor: "collection_data_source", title: "CollectionDataSource" }
   - { anchor: "broadcast_variables", title: "Broadcast Variables" }
+  - { anchor: "emr_tutorial", title: "Stratosphere in EMR" }
 ---
 
 <p class="lead">
@@ -63,4 +64,95 @@ public class MyMapper extends MapFunction {
 *Note*: As the content of broadcast variables is kept in-memory on each node, it should not become too large. For simpler things like scalar values you should use `setParameter(...)`.
 
 An example of how to use Broadcast Variables in practice can be found in the <a href="https://github.com/stratosphere/stratosphere/blob/master/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/record/kmeans/KMeans.java">K-Means example</a>.
+</section>
+
+<section id='emr_tutorial'>
+### Stratosphere in Amazon Elastic MapReduce (EMR)
+
+<br/><br/><br/><br/><br/>
+#### Introduction
+* This tutorial explains how to deploy a stratosphere environment with Amazon Elastic MapReduce. 
+* Setup in this tutorial can be used as a template for future configurations
+
+
+#### First steps: New to Amazon?
+[<img src='img/AmazonHome.png' style='width: 100%;' title='Amazon Home' />](img/AmazonHome.png)
+#### Create an EC2 key pair. <br/>
+
+  1. Click on [EC2](https://console.aws.amazon.com/ec2/v2/home#KeyPairs:)
+  2. Create new EC2 key pair.<br/>
+  [<img src='img/KeyPairs.png' style='width: 100%;' title='Create new EC2 key pair' />](img/KeyPairs.png) <br/><br/><br/>
+  3. Save it locally.<br/>
+  
+   * Key pairs are used to SSH into your instances. Read more about [how to access your instances](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstances.html)<br/>
+   * The access key gives one access to your full account. Keep it save! The access key file is not needed but EMR does not work without having created an access key. 
+
+#### Create an Access key
+ 1. Click on Security Credentials in your account management tab in the right upper corner.
+[<img src='img/IrelandSecurityCredentialsMenue.png' style='width: 100%;' title='Click on Security Credentials in the tab' />](img/IrelandSecurityCredentialsMenue.png) <br/><br/><br/>
+ 2. Continue to your security credentials.
+[<img src='img/SecurityCredentialsFirst.png' style='width: 100%;' title='Continue to Security Credentials 'Click on Security Credentials in the tab' />](img/SecurityCredentialsFirst.png)<br/><br/><br/>
+ 3. Click on Acces Keys and create a new one.
+[<img src='img/SecurityCredentials.png' style='width: 100%;' title='Create new Acces Key' />](img/SecurityCredentials.png)<br/><br/><br/>
+ 4. Save access key locally. <br/>
+
+<br/><br/><br/><br/><br/>
+#### Creating an Elastic MapReduce Cluster
+1. Click on [ElasticMapreduce](https://console.aws.amazon.com/elasticmapreduce/vnext/home)
+ [<img src='img/AmazonHome.png' style='width: 100%;' title='Amazon Home' />](img/AmazonHome.png)<br/><br/><br/>
+2. Click on create cluster [<img src='img/EMRNew.png'  style='width: 100%;' title='New EMR Cluster'/>](img/EMRNew.png)
+
+<br/><br/><br/><br/><br/>
+#### Step 'Set up cluster':
+1. Chose a name </br>
+2. Chose AMI version with at least hadoop 2.2.0. AMI 3.0.3 (Hadoop 2.2.0) for example. <br/>
+3. Remove all not needed software. 
+  * Stratosphere does not need any additional software installed. It runs on top of Hadoop Yarn and HDFS.
+
+[<img src='img/SoftwareConfiguration.png' style='width: 100%;' title='Software Configuration' />](img/SoftwareConfiguration.png) <br/><br/><br/>
+4. Choose number and type of instances.
+ * The stratopshere JobManger (Stratosphere master) runs on the master instance 
+ * Stratosphere TaskManagers (Straosphere worker/slave) run on core instances.
+
+[<img src='img/HardwareConfigurationMedium.png' style='width: 100%;' title='Setting up hardware configuration' />](img/HardwareConfigurationMedium.png)<br/><br/><br/>
+5. Choose amazon EC2 key pair for SSH access <br/>
+[<img src='img/SecurityAndAccess.png' style='width: 100%;' title='Security and access configuration. Select your EC@ key pair.'/>](img/SecurityAndAccess.png)     
+
+<br/><br/><br/><br/><br/>
+#### Step 'Create bootstrap-action':
+1. Select bootstrap-action 'run-if'. <br/>
+2. Click 'Configure and add'. <br/>
+3. Copy 'instance.isMaster=true s3n://stratosphere-bootstrap/install-stratosphere-yarn.sh' into arguments. <br/>
+ * This will run the stratosphere installation on the master node. <br/>
+
+[<img src='img/BootstrapActionStratosphere.png' style='width: 100%;' title='Configure and add bootstrap action.' />](img/BootstrapActionStratosphere.png)<br/><br/><br/>
+4. Add bootstrap action.
+
+<br/><br/><br/><br/><br/>
+##### Step 'Create step to run stratosphere'
+1. Select step 'Custom jar'.
+2. Click 'Configure and add'.
+3. Copy 's3://elasticmapreduce/libs/script-runner/script-runner.jar' into Jar S3 Location
+Copy '/home/hadoop/start-stratosphere.sh -n 2 -j 1024 -t 1024' into arguments.
+ * -n is the number of TaskManagers.
+ * -j memory (heapspace) for the JobManager.
+ * -t memory for the TaskManagers.
+
+[<img src='img/StepsRunStratosphere.png' style='width: 100%;' title='Configure and add step' />](img/StepsRunStratosphere.png)<br/><br/><br/>
+4. Add step.
+
+<br/><br/><br/><br/><br/>
+##### Create cluster and reuse it
+* Click create cluster to start the amazon instances and install stratosphere on them. 
+* It will take some time until stratosphere is started, the completed installation step will indicate that strosphere is running.
+
+[<img src='img/StepCompleted.png' style='width: 100%;' title='Running stratosphere'/>](img/StepCompleted.png)
+* The settings can be copied by cloning this cluster. Hence this cluster can be reused as a templated for a configured and running startosphere cluster. 
+
+<br/><br/><br/><br/><br/>
+#### Troubleshoot - What to do when something went wrong?:
+<br/><br/><br/><br/><br/>
+##### Termination with errors No active keys found for user account - Create AWS Access Key
+[<img src='img/TerminatedWithErrors.png' style='width: 100%;' title='Cluster terminated with errors' />](img/TerminatedWithErrors.png)<br/><br/><br/>
+1. Create access key. Described in "new to Amazon?".
 </section>
