@@ -128,7 +128,7 @@ An example of how to use Broadcast Variables in practice can be found in the <a 
 4. Add bootstrap action.
 
 <br/><br/><br/><br/><br/>
-##### Step 'Create step to run stratosphere'
+#### Step 'Create step to run stratosphere'
 1. Select step 'Custom jar'.
 2. Click 'Configure and add'.
 3. Copy 's3://elasticmapreduce/libs/script-runner/script-runner.jar' into Jar S3 Location
@@ -141,12 +141,16 @@ Copy '/home/hadoop/start-stratosphere.sh -n 2 -j 1024 -t 1024' into arguments.
 4. Add step.
 
 <br/><br/><br/><br/><br/>
-##### Create cluster and reuse it
+#### Create cluster and reuse it
 * Click create cluster to start the Amazon instances and install Stratosphere on them. 
 * It will take some time until Stratosphere is started, the completed installation step will indicate that Stratosphere is running.
 
 [<img src='img/StepCompleted.png' style='width: 100%;' title='Running stratosphere'/>](img/StepCompleted.png)
 * The settings can be copied by cloning this cluster. Hence this cluster can be reused as a templated for a configured and running Stratosphere cluster. 
+
+
+###### Accessing Stratosphere Interface
+* The Yarn interface and Stratopshere interface will be up. [This tutorial (Step 4)](http://stratosphere.eu/blog/tutorial/2014/02/18/amazon-elastic-mapreduce-cloud-yarn.html) shows how to get access to both interfaces.
 
 <br/><br/><br/><br/><br/>
 #### Troubleshoot - What to do when something went wrong?:
