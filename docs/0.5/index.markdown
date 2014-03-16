@@ -69,12 +69,11 @@ An example of how to use Broadcast Variables in practice can be found in the <a 
 <section id='emr_tutorial'>
 ### Stratosphere in Amazon Elastic MapReduce (EMR)
 
-<br/><br/><br/><br/><br/>
 #### Introduction
-* This tutorial explains how to deploy a stratosphere environment with Amazon Elastic MapReduce. 
+* This tutorial explains how to deploy a Stratosphere environment with Amazon Elastic MapReduce. 
 * Setup in this tutorial can be used as a template for future configurations
 
-
+<br/><br/><br/><br/><br/>
 #### First steps: New to Amazon?
 [<img src='img/AmazonHome.png' style='width: 100%;' title='Amazon Home' />](img/AmazonHome.png)
 #### Create an EC2 key pair. <br/>
@@ -92,7 +91,7 @@ An example of how to use Broadcast Variables in practice can be found in the <a 
 [<img src='img/IrelandSecurityCredentialsMenue.png' style='width: 100%;' title='Click on Security Credentials in the tab' />](img/IrelandSecurityCredentialsMenue.png) <br/><br/><br/>
  2. Continue to your security credentials.
 [<img src='img/SecurityCredentialsFirst.png' style='width: 100%;' title='Continue to Security Credentials 'Click on Security Credentials in the tab' />](img/SecurityCredentialsFirst.png)<br/><br/><br/>
- 3. Click on Acces Keys and create a new one.
+ 3. Click on Access Keys and create a new one.
 [<img src='img/SecurityCredentials.png' style='width: 100%;' title='Create new Acces Key' />](img/SecurityCredentials.png)<br/><br/><br/>
  4. Save access key locally. <br/>
 
@@ -105,17 +104,17 @@ An example of how to use Broadcast Variables in practice can be found in the <a 
 <br/><br/><br/><br/><br/>
 #### Step 'Set up cluster':
 1. Chose a name </br>
-2. Chose AMI version with at least hadoop 2.2.0. AMI 3.0.3 (Hadoop 2.2.0) for example. <br/>
-3. Remove all not needed software. 
-  * Stratosphere does not need any additional software installed. It runs on top of Hadoop Yarn and HDFS.
+2. Chose AMI version with at least Hadoop 2.2.0. AMI 3.0.3 (Hadoop 2.2.0) for example. <br/>
+3. Remove all applications which additionally will be installed. 
+  * Stratosphere does not need any additional applications installed. It runs on top of Hadoop Yarn and Hadoop Distributed File System.
 
 [<img src='img/SoftwareConfiguration.png' style='width: 100%;' title='Software Configuration' />](img/SoftwareConfiguration.png) <br/><br/><br/>
 4. Choose number and type of instances.
- * The stratopshere JobManger (Stratosphere master) runs on the master instance 
- * Stratosphere TaskManagers (Straosphere worker/slave) run on core instances.
+ * The Stratosphere JobManger (Stratosphere master) runs on the master instance 
+ * Stratosphere TaskManagers (Stratosphere worker/slave) run on core instances.
 
 [<img src='img/HardwareConfigurationMedium.png' style='width: 100%;' title='Setting up hardware configuration' />](img/HardwareConfigurationMedium.png)<br/><br/><br/>
-5. Choose amazon EC2 key pair for SSH access <br/>
+5. Choose Amazon EC2 key pair for SSH access <br/>
 [<img src='img/SecurityAndAccess.png' style='width: 100%;' title='Security and access configuration. Select your EC@ key pair.'/>](img/SecurityAndAccess.png)     
 
 <br/><br/><br/><br/><br/>
@@ -123,7 +122,7 @@ An example of how to use Broadcast Variables in practice can be found in the <a 
 1. Select bootstrap-action 'run-if'. <br/>
 2. Click 'Configure and add'. <br/>
 3. Copy 'instance.isMaster=true s3n://stratosphere-bootstrap/install-stratosphere-yarn.sh' into arguments. <br/>
- * This will run the stratosphere installation on the master node. <br/>
+ * This will run the Stratosphere installation on the master node. <br/>
 
 [<img src='img/BootstrapActionStratosphere.png' style='width: 100%;' title='Configure and add bootstrap action.' />](img/BootstrapActionStratosphere.png)<br/><br/><br/>
 4. Add bootstrap action.
@@ -143,11 +142,11 @@ Copy '/home/hadoop/start-stratosphere.sh -n 2 -j 1024 -t 1024' into arguments.
 
 <br/><br/><br/><br/><br/>
 ##### Create cluster and reuse it
-* Click create cluster to start the amazon instances and install stratosphere on them. 
-* It will take some time until stratosphere is started, the completed installation step will indicate that strosphere is running.
+* Click create cluster to start the Amazon instances and install Stratosphere on them. 
+* It will take some time until Stratosphere is started, the completed installation step will indicate that Stratosphere is running.
 
 [<img src='img/StepCompleted.png' style='width: 100%;' title='Running stratosphere'/>](img/StepCompleted.png)
-* The settings can be copied by cloning this cluster. Hence this cluster can be reused as a templated for a configured and running startosphere cluster. 
+* The settings can be copied by cloning this cluster. Hence this cluster can be reused as a templated for a configured and running Stratosphere cluster. 
 
 <br/><br/><br/><br/><br/>
 #### Troubleshoot - What to do when something went wrong?:
