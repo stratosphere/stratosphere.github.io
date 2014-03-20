@@ -144,9 +144,10 @@ Copy '/home/hadoop/start-stratosphere.sh -n 2 -j 1024 -t 1024' into arguments.
 #### Create cluster and reuse it
 * Click create cluster to start the Amazon instances and install Stratosphere on them. 
 * It will take some time until Stratosphere is started, the completed installation step will indicate that Stratosphere is running.
+* Use "Master public DNS":9046 to access the YARN interface. To access on port 9046, the EMR master security group (under EC2) needs to allow access on port 9046. For more information [read here](http://docs.aws.amazon.com/gettingstarted/latest/wah/getting-started-security-group.html).
+* The settings can be copied by cloning this cluster. This cluster can be reused as a template for a configured and running Stratosphere cluster. 
 
-[<img src='img/StepCompleted.PNG' style='width: 100%;' title='Running stratosphere'/>](img/StepCompleted.PNG)
-* The settings can be copied by cloning this cluster. Hence this cluster can be reused as a templated for a configured and running Stratosphere cluster. 
+[<img src='img/StepCompleted.PNG' style='width: 100%;' title='Running stratosphere'/>](img/StepCompleted.PNG) 
 
 
 ###### Accessing Stratosphere Interface
