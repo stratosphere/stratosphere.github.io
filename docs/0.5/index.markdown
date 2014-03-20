@@ -75,12 +75,12 @@ An example of how to use Broadcast Variables in practice can be found in the <a 
 
 <br/><br/><br/><br/><br/>
 #### First steps: New to Amazon?
-[<img src='img/AmazonHome.png' style='width: 100%;' title='Amazon Home' />](img/AmazonHome.png)
+[<img src='img/AmazonHome.PNG' style='width: 100%;' title='Amazon Home' />](img/AmazonHome.PNG)
 #### Create an EC2 key pair. <br/>
 
   1. Click on [EC2](https://console.aws.amazon.com/ec2/v2/home#KeyPairs:)
   2. Create new EC2 key pair.<br/>
-  [<img src='img/KeyPairs.png' style='width: 100%;' title='Create new EC2 key pair' />](img/KeyPairs.png) <br/><br/><br/>
+  [<img src='img/KeyPairs.PNG' style='width: 100%;' title='Create new EC2 key pair' />](img/KeyPairs.PNG) <br/><br/><br/>
   3. Save it locally.<br/>
   
    * Key pairs are used to SSH into your instances. Read more about [how to access your instances](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstances.html)<br/>
@@ -88,18 +88,18 @@ An example of how to use Broadcast Variables in practice can be found in the <a 
 
 #### Create an Access key
  1. Click on Security Credentials in your account management tab in the right upper corner.
-[<img src='img/IrelandSecurityCredentialsMenue.png' style='width: 100%;' title='Click on Security Credentials in the tab' />](img/IrelandSecurityCredentialsMenue.png) <br/><br/><br/>
+[<img src='img/IrelandSecurityCredentialsMenue.PNG' style='width: 100%;' title='Click on Security Credentials in the tab' />](img/IrelandSecurityCredentialsMenue.PNG) <br/><br/><br/>
  2. Continue to your security credentials.
-[<img src='img/SecurityCredentialsFirst.png' style='width: 100%;' title='Continue to Security Credentials 'Click on Security Credentials in the tab' />](img/SecurityCredentialsFirst.png)<br/><br/><br/>
+[<img src='img/SecurityCredentialsFirst.PNG' style='width: 100%;' title='Continue to Security Credentials 'Click on Security Credentials in the tab' />](img/SecurityCredentialsFirst.PNG)<br/><br/><br/>
  3. Click on Access Keys and create a new one.
-[<img src='img/SecurityCredentials.png' style='width: 100%;' title='Create new Acces Key' />](img/SecurityCredentials.png)<br/><br/><br/>
+[<img src='img/SecurityCredentials.PNG' style='width: 100%;' title='Create new Acces Key' />](img/SecurityCredentials.PNG)<br/><br/><br/>
  4. Save access key locally. <br/>
 
 <br/><br/><br/><br/><br/>
 #### Creating an Elastic MapReduce Cluster
 1. Click on [ElasticMapreduce](https://console.aws.amazon.com/elasticmapreduce/vnext/home)
- [<img src='img/AmazonHome.png' style='width: 100%;' title='Amazon Home' />](img/AmazonHome.png)<br/><br/><br/>
-2. Click on create cluster [<img src='img/EMRNew.png'  style='width: 100%;' title='New EMR Cluster'/>](img/EMRNew.png)
+ [<img src='img/AmazonHome.PNG' style='width: 100%;' title='Amazon Home' />](img/AmazonHome.PNG)<br/><br/><br/>
+2. Click on create cluster [<img src='img/EMRNew.PNG'  style='width: 100%;' title='New EMR Cluster'/>](img/EMRNew.PNG)
 
 <br/><br/><br/><br/><br/>
 #### Step 'Set up cluster':
@@ -108,14 +108,14 @@ An example of how to use Broadcast Variables in practice can be found in the <a 
 3. Remove all applications which additionally will be installed. 
   * Stratosphere does not need any additional applications installed. It runs on top of Hadoop Yarn and Hadoop Distributed File System.
 
-[<img src='img/SoftwareConfiguration.png' style='width: 100%;' title='Software Configuration' />](img/SoftwareConfiguration.png) <br/><br/><br/>
+[<img src='img/SoftwareConfiguration.PNG' style='width: 100%;' title='Software Configuration' />](img/SoftwareConfiguration.PNG) <br/><br/><br/>
 4. Choose number and type of instances.
  * The Stratosphere JobManger (Stratosphere master) runs on the master instance 
  * Stratosphere TaskManagers (Stratosphere worker/slave) run on core instances.
 
-[<img src='img/HardwareConfigurationMedium.png' style='width: 100%;' title='Setting up hardware configuration' />](img/HardwareConfigurationMedium.png)<br/><br/><br/>
+[<img src='img/HardwareConfigurationMedium.PNG' style='width: 100%;' title='Setting up hardware configuration' />](img/HardwareConfigurationMedium.PNG)<br/><br/><br/>
 5. Choose Amazon EC2 key pair for SSH access <br/>
-[<img src='img/SecurityAndAccess.png' style='width: 100%;' title='Security and access configuration. Select your EC@ key pair.'/>](img/SecurityAndAccess.png)     
+[<img src='img/SecurityAndAccess.PNG' style='width: 100%;' title='Security and access configuration. Select your EC@ key pair.'/>](img/SecurityAndAccess.PNG)     
 
 <br/><br/><br/><br/><br/>
 #### Step 'Create bootstrap-action':
@@ -124,7 +124,7 @@ An example of how to use Broadcast Variables in practice can be found in the <a 
 3. Copy 'instance.isMaster=true s3n://stratosphere-bootstrap/install-stratosphere-yarn.sh' into arguments. <br/>
  * This will run the Stratosphere installation on the master node. <br/>
 
-[<img src='img/BootstrapActionStratosphere.png' style='width: 100%;' title='Configure and add bootstrap action.' />](img/BootstrapActionStratosphere.png)<br/><br/><br/>
+[<img src='img/BootstrapActionStratosphere.PNG' style='width: 100%;' title='Configure and add bootstrap action.' />](img/BootstrapActionStratosphere.PNG)<br/><br/><br/>
 4. Add bootstrap action.
 
 <br/><br/><br/><br/><br/>
@@ -137,7 +137,7 @@ Copy '/home/hadoop/start-stratosphere.sh -n 2 -j 1024 -t 1024' into arguments.
  * -j memory (heapspace) for the JobManager.
  * -t memory for the TaskManagers.
 
-[<img src='img/StepsRunStratosphere.png' style='width: 100%;' title='Configure and add step' />](img/StepsRunStratosphere.png)<br/><br/><br/>
+[<img src='img/StepsRunStratosphere.PNG' style='width: 100%;' title='Configure and add step' />](img/StepsRunStratosphere.PNG)<br/><br/><br/>
 4. Add step.
 
 <br/><br/><br/><br/><br/>
@@ -145,7 +145,7 @@ Copy '/home/hadoop/start-stratosphere.sh -n 2 -j 1024 -t 1024' into arguments.
 * Click create cluster to start the Amazon instances and install Stratosphere on them. 
 * It will take some time until Stratosphere is started, the completed installation step will indicate that Stratosphere is running.
 
-[<img src='img/StepCompleted.png' style='width: 100%;' title='Running stratosphere'/>](img/StepCompleted.png)
+[<img src='img/StepCompleted.PNG' style='width: 100%;' title='Running stratosphere'/>](img/StepCompleted.PNG)
 * The settings can be copied by cloning this cluster. Hence this cluster can be reused as a templated for a configured and running Stratosphere cluster. 
 
 
@@ -156,6 +156,6 @@ Copy '/home/hadoop/start-stratosphere.sh -n 2 -j 1024 -t 1024' into arguments.
 #### Troubleshoot - What to do when something went wrong?:
 <br/><br/><br/><br/><br/>
 ##### Termination with errors No active keys found for user account - Create AWS Access Key
-[<img src='img/TerminatedWithErrors.png' style='width: 100%;' title='Cluster terminated with errors' />](img/TerminatedWithErrors.png)<br/><br/><br/>
+[<img src='img/TerminatedWithErrors.PNG' style='width: 100%;' title='Cluster terminated with errors' />](img/TerminatedWithErrors.PNG)<br/><br/><br/>
 1. Create access key. Described in "new to Amazon?".
 </section>
