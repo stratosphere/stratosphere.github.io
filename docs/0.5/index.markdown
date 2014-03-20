@@ -5,6 +5,7 @@ links:
   - { anchor: "jdbc", title: "JDBC Input/Output Format" }
   - { anchor: "collection_data_source", title: "CollectionDataSource" }
   - { anchor: "broadcast_variables", title: "Broadcast Variables" }
+  - { anchor: "emr_tutorial", title: "Stratosphere in EMR" }
 ---
 
 <p class="lead">
@@ -63,4 +64,99 @@ public class MyMapper extends MapFunction {
 *Note*: As the content of broadcast variables is kept in-memory on each node, it should not become too large. For simpler things like scalar values you should use `setParameter(...)`.
 
 An example of how to use Broadcast Variables in practice can be found in the <a href="https://github.com/stratosphere/stratosphere/blob/master/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/record/kmeans/KMeans.java">K-Means example</a>.
+</section>
+
+<section id='emr_tutorial'>
+### Stratosphere in Amazon Elastic MapReduce (EMR)
+
+#### Introduction
+* This tutorial explains how to deploy a Stratosphere environment with Amazon Elastic MapReduce. 
+* Setup in this tutorial can be used as a template for future configurations
+
+<br/><br/><br/><br/><br/>
+#### First steps: New to Amazon?
+[<img src='img/AmazonHome.PNG' style='width: 100%;' title='Amazon Home' />](img/AmazonHome.PNG)
+#### Create an EC2 key pair. <br/>
+
+  1. Click on [EC2](https://console.aws.amazon.com/ec2/v2/home#KeyPairs:)
+  2. Create new EC2 key pair.<br/>
+  [<img src='img/KeyPairs.PNG' style='width: 100%;' title='Create new EC2 key pair' />](img/KeyPairs.PNG) <br/><br/><br/>
+  3. Save it locally.<br/>
+  
+   * Key pairs are used to SSH into your instances. Read more about [how to access your instances](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstances.html)<br/>
+   * The access key gives one access to your full account. Keep it save! The access key file is not needed but EMR does not work without having created an access key. 
+
+#### Create an Access key
+ 1. Click on Security Credentials in your account management tab in the right upper corner.
+[<img src='img/IrelandSecurityCredentialsMenue.PNG' style='width: 100%;' title='Click on Security Credentials in the tab' />](img/IrelandSecurityCredentialsMenue.PNG) <br/><br/><br/>
+ 2. Continue to your security credentials.
+[<img src='img/SecurityCredentialsFirst.PNG' style='width: 100%;' title='Continue to Security Credentials 'Click on Security Credentials in the tab' />](img/SecurityCredentialsFirst.PNG)<br/><br/><br/>
+ 3. Click on Access Keys and create a new one.
+[<img src='img/SecurityCredentials.PNG' style='width: 100%;' title='Create new Acces Key' />](img/SecurityCredentials.PNG)<br/><br/><br/>
+ 4. Save access key locally. <br/>
+
+<br/><br/><br/><br/><br/>
+#### Creating an Elastic MapReduce Cluster
+1. Click on [ElasticMapreduce](https://console.aws.amazon.com/elasticmapreduce/vnext/home)
+ [<img src='img/AmazonHome.PNG' style='width: 100%;' title='Amazon Home' />](img/AmazonHome.PNG)<br/><br/><br/>
+2. Click on create cluster [<img src='img/EMRNew.PNG'  style='width: 100%;' title='New EMR Cluster'/>](img/EMRNew.PNG)
+
+<br/><br/><br/><br/><br/>
+#### Step 'Set up cluster':
+1. Chose a name </br>
+2. Chose AMI version with at least Hadoop 2.2.0. AMI 3.0.3 (Hadoop 2.2.0) for example. <br/>
+3. Remove all applications which additionally will be installed. 
+  * Stratosphere does not need any additional applications installed. It runs on top of Hadoop Yarn and Hadoop Distributed File System.
+
+[<img src='img/SoftwareConfiguration.PNG' style='width: 100%;' title='Software Configuration' />](img/SoftwareConfiguration.PNG) <br/><br/><br/>
+4. Choose number and type of instances.
+ * The Stratosphere JobManger (Stratosphere master) runs on the master instance 
+ * Stratosphere TaskManagers (Stratosphere worker/slave) run on core instances.
+
+[<img src='img/HardwareConfigurationMedium.PNG' style='width: 100%;' title='Setting up hardware configuration' />](img/HardwareConfigurationMedium.PNG)<br/><br/><br/>
+5. Choose Amazon EC2 key pair for SSH access <br/>
+[<img src='img/SecurityAndAccess.PNG' style='width: 100%;' title='Security and access configuration. Select your EC@ key pair.'/>](img/SecurityAndAccess.PNG)     
+
+<br/><br/><br/><br/><br/>
+#### Step 'Create bootstrap-action':
+1. Select bootstrap-action 'run-if'. <br/>
+2. Click 'Configure and add'. <br/>
+3. Copy 'instance.isMaster=true s3n://stratosphere-bootstrap/install-stratosphere-yarn.sh' into arguments. <br/>
+ * This will run the Stratosphere installation on the master node. <br/>
+
+[<img src='img/BootstrapActionStratosphere.PNG' style='width: 100%;' title='Configure and add bootstrap action.' />](img/BootstrapActionStratosphere.PNG)<br/><br/><br/>
+4. Add bootstrap action.
+
+<br/><br/><br/><br/><br/>
+#### Step 'Create step to run stratosphere'
+1. Select step 'Custom jar'.
+2. Click 'Configure and add'.
+3. Copy 's3://elasticmapreduce/libs/script-runner/script-runner.jar' into Jar S3 Location
+Copy '/home/hadoop/start-stratosphere.sh -n 2 -j 1024 -t 1024' into arguments.
+ * -n is the number of TaskManagers.
+ * -j memory (heapspace) for the JobManager.
+ * -t memory for the TaskManagers.
+
+[<img src='img/StepsRunStratosphere.PNG' style='width: 100%;' title='Configure and add step' />](img/StepsRunStratosphere.PNG)<br/><br/><br/>
+4. Add step.
+
+<br/><br/><br/><br/><br/>
+#### Create cluster and reuse it
+* Click create cluster to start the Amazon instances and install Stratosphere on them. 
+* It will take some time until Stratosphere is started, the completed installation step will indicate that Stratosphere is running.
+* Use "Master public DNS":9046 to access the YARN interface. To access on port 9046, the EMR master security group (under EC2) needs to allow access on port 9046. For more information [read here](http://docs.aws.amazon.com/gettingstarted/latest/wah/getting-started-security-group.html).
+* The settings can be copied by cloning this cluster. This cluster can be reused as a template for a configured and running Stratosphere cluster. 
+
+[<img src='img/StepCompleted.PNG' style='width: 100%;' title='Running stratosphere'/>](img/StepCompleted.PNG) 
+
+
+###### Accessing Stratosphere Interface
+* The Yarn interface and Stratopshere interface will be up. [This tutorial (Step 4)](http://stratosphere.eu/blog/tutorial/2014/02/18/amazon-elastic-mapreduce-cloud-yarn.html) shows how to get access to both interfaces.
+
+<br/><br/><br/><br/><br/>
+#### Troubleshoot - What to do when something went wrong?:
+<br/><br/><br/><br/><br/>
+##### Termination with errors No active keys found for user account - Create AWS Access Key
+[<img src='img/TerminatedWithErrors.PNG' style='width: 100%;' title='Cluster terminated with errors' />](img/TerminatedWithErrors.PNG)<br/><br/><br/>
+1. Create access key. Described in "new to Amazon?".
 </section>
