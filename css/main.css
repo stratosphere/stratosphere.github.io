@@ -601,7 +601,8 @@ color: #3a87ad;
 
 /* documentation v04 */
 
-#docs_v04 img {
+#docs_v04 img,
+#docs_v05 img {
     width: 75%;
     display: block;
     margin-left: auto;

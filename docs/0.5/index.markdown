@@ -1,5 +1,5 @@
 --- 
-layout: inner_with_sidebar
+layout: inner_docs_v05
 title: "Documentation (0.5-SNAPSHOT)"
 links: 
   - { anchor: "jdbc", title: "JDBC Input/Output Format" }
@@ -7,8 +7,16 @@ links:
   - { anchor: "broadcast_variables", title: "Broadcast Variables" }
 ---
 
+## Documentation (0.5)
+
+<p class="lead">Check out the <strong>Setup & Configuration</strong> section, if you need detailed instructions on setting up Stratosphere. The instructions here are more detailed versions of the <a href="{{site.baseurl}}/quickstart/">quickstart guides</a>.</p>
+
+<p class="lead">The <strong>Programming Guides</strong> show you how to program Stratosphere and also provide some detailed example programs.</p>
+
 <p class="lead">
 Documentation on *new features* and *changes* contained in the current *0.5-SNAPSHOT* development branch. It should be read *in addition* to the documentation for the latest 0.4 release.
+
+<hr />
 
 <section id="jdbc">
 ### JDBC Input/Output Format

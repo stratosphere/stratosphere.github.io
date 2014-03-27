@@ -14,23 +14,18 @@ links:
   - { section: true, anchor: "programming_guides", title: "Programming Guides"}
   - { anchor: "java", title: "Java API"}
   - { anchor: "scala", title: "Scala API"}
+  - { anchor: "hadoop_compatability", title: "Avro/Hadoop Compatability"}
   - { anchor: "iterations", title: "Iterations"}
   - { anchor: "spargel", title: "Spargel"}
   - { anchor: "examples", title: "Examples"}
-  - { anchor: "pmodel", title: "Programming Model"}
   - { anchor: "meteorql", title: "Meteor Query Language"}	
   # Section: Program Execution
   - { section: true, anchor: "program_execution", title: "Program Execution"}
-  - { anchor: "local_executor", title: "Local Executor/Debugging"}
-  - { anchor: "remote_executor", title: "Remote Excecutor"}
+  - { anchor: "local_execution", title: "Local Execution/Debugging"}
+  - { anchor: "cluster_execution", title: "Cluster Excecution"}
   - { anchor: "cli_client", title: "Commandline Client"}
   - { anchor: "web_interface", title: "Web Interface"}
-#  # Section: Internals
-#  - { section: true, anchor: "internals", title: "Internals"}
-#  - { anchor: "dev", title: "Development"}
-#  - { anchor: "pact", title: "PACT Runtime"}
-#  - { anchor: "nephele", title: "Nephele Execution Engine"}
-version: 0.4
+version: 0.5
 ---
 {% assign current_section = nil %}
 <div class="container" style="margin-top: 2em;">
@@ -70,7 +65,7 @@ version: 0.4
     <div class="col-md-9">
       {% if page.url != "/docs/{{ page.version }}/index.html" %}
       <ol class="breadcrumb">
-        <li><a href="{{ site.baseurl }}/docs/0.4/">Documentation (0.4)</a></li>
+        <li><a href="{{ site.baseurl }}/docs/{{ page.version }}/">Documentation (0.5)</a></li>
         {% for link in page.links %}
         {% if page.url contains link.anchor %}
           {% if link('section')? %}
@@ -83,13 +78,6 @@ version: 0.4
         {% endfor %}
       </ol>
       {% endif %}
-
-      <div class="panel panel-info">
-         <div class="panel-heading">
-          <strong>Have a <a href="{{site.baseurl}}/docs/0.5/index.html">look at the docs of the upcoming <em>0.5 release</em></a>, which includes a new Java API and many other new features!</strong>
-        </div>
-      </div>
-
       <p class="text-right"><a href="https://github.com/stratosphere/stratosphere/blob/gh-pages{{page.url | replace: '.html', '.markdown'}}">
           <button type="button" class="btn btn-success btn-xs"><i class="icon-edit"></i> Edit this page</button>
         </a>
