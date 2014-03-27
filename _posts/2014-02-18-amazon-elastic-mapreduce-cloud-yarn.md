@@ -103,10 +103,8 @@ to
 {% highlight bash %}
 JobManager is now running on ip-172-31-13-68.us-west-2.compute.internal:6123
 {% endhighlight %}
-Stratosphere is ready to execute jobs.
+Stratosphere has started the JobManager. It will take a few seconds until the TaskManagers (workers) have connected to the JobManager. To see how many TaskManagers connected, you have to access the JobManager's web interface. Follow the steps below to do that ...
 
-
-You'll need the JobManager <code>host:post</code> information later if you want to submit jobs to the Stratosphere cluster.
 
 
 
@@ -172,14 +170,15 @@ To run a Job, enter the following command into the master's command line:
 # optional: go to the extracted directory
 cd stratosphere-yarn-0.5-SNAPSHOT/
 # run the wordcount example
-./bin/stratosphere run -w -m  <your JobManagers hostname>:6123 -j examples/stratosphere-java-examples-0.5-SNAPSHOT-WordCount.jar  -a 16 hdfs:///input hdfs:///output
+./bin/stratosphere run -w -j examples/stratosphere-java-examples-0.5-SNAPSHOT-WordCount.jar  -a 16 hdfs:///input hdfs:///output
 {% endhighlight %}
+
+Make sure that the number of TaskManager's have connected to the JobManager.
 
 Lets go through the command in detail:
 
 * `./bin/stratosphere` is the standard launcher for Stratosphere jobs from the command line
 * The `-w` flag stands for "wait". It is a very useful to track the progress of the job.
-* `-m ip-172-31-14-146.us-west-2.compute.internal:6123` is the address of the JobManager. The exact address in for your case is visible in the terminal that contains the YARN output. (`-m` is short for *master*)
 * `-j examples/stratosphere-java-examples-0.5-SNAPSHOT-WordCount.jar` the `-j` command sets the jar file containing the job. If you have you own application, place your Jar-file here.
 * `-a 16 hdfs:///input hdfs:///output` the `-a` command specifies the Job-specific arguments. In this case, the wordcount expects the following input `<numSubStasks> <input> <output>`.
 
