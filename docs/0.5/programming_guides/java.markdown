@@ -136,12 +136,57 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 Iteration Operators
 -------------------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Iterations allow you to implement *loops* in Stratosphere programs. [This page]({{site.baseurl}}/docs/{{site.current_stable_documentation}}/programming_guides/iterations.html) gives a general introduction to iterations. This section here provides quick examples.
+The iteration operators encapsulate a part of the program and execute it repeatedly, feeding back the result of one iteration (the partial solution) into the next iteration. Stratosphere has two different types of iterations, *BulkIteration* and *DeltaIteration*.
+
+### Bulk Iterations
+
+To create a Bulk Iteration one has to call the *.iterate()* function on the DataSet the iteration should start at. It returns an *IterativeDataSet* (in contrast to a regular DataSet) that can be passed to an operator that should be called inside the iteration. 
+It kind of serves as the starting point of the loop. To specify the end of the iteration the function *.closeWith()* needs to be called on the IterativeDataSet with the inner part of the iteration as parameter and an optional termination criterion. The example below illustrates this:
+
+{% highlight java %}
+// vertexID, initialRank
+DataSet<Tuple2<Long, Double>> pageWithRankInput = env.readCsvFile(pageWithRankInputPath).types(Long.class, Double.class);
+
+// vertexID, vertexID
+DataSet<Tuple2<Long, Long>> adjacencyListInput = env.readCsvFile(adjacencyListInputPath).types(Long.class, Long.class);
+
+IterativeDataSet<Tuple2<Long, Double>> iteration = pageWithRankInput.iterate(maxIterations);
+
+DataSet<Tuple2<Long, Double>> iterationInner = iteration.coGroup(adjacencyListInput).where(0).equalTo(0).with(new JoinVertexWithEdgesMatch())
+		.groupBy(0).reduce(new AggregatingReduce());
+
+DataSet<Tuple2<Long, Double>> termination =  iterationInner.join(iteration).where(0).equalTo(0).with(new JoinOldAndNew());
+
+iteration.closeWith(iterationInner, termination).writeAsCsv(outputPath);
+{% endhighlight %}
+
+If no termination criterion is specified (this means only the iterationInner is passed to closeWith) then the iteration terminates after the given number maxIterations.
+
+### Delta Iterations
+
+Delta iterations exploit the fact that many algorithms do not change every record in the solution in each iteration. In addition to the partial solution data set that is fed back (here called the workset), delta iterations maintain a state across iterations (solution set), which can be joined with and which is updated through deltas. The result of the iterative computation is the state after the last iteration. Please see [this page]({{site.baseurl}}/docs/{{site.current_stable_documentation}}/programming_guides/iterations.html) for an introduction to the basic principle of delta iterations.
+
+Defining delta iterations is similar to defining a bulk iteration. For delta iterations, two data sets form the input to each iteration (workset and solution set), and two data sets are produced as the result (new workset, solution set delta). 
+
+To start a Delta Iteration *iterateDelta()* is called on the initial SolutionSet and gets passed the initial DeltaSet, the maximum number of iterations and the key positions. The returned DeltaIterativeDataSet can be used for operators inside the iteration and represents the Workset. To call an operator on the SolutionSet one has to use iteration.getSolutionSet(). The example below illustrates this:
+
+{% highlight java %}
+DataSet<Tuple2<Long, Double>> initialSolutionSet = env.readCsvFile(solutionSetInputPath).fieldDelimiter(' ').types(Long.class, Double.class);
+
+DataSet<Tuple2<Long, Double>> initialDeltaSet = env.readCsvFile(deltasInputPath).fieldDelimiter(' ').types(Long.class, Double.class);
+
+DataSet<Tuple3<Long, Long, Long>> dependencySetInput = env.readCsvFile(dependencySetInputPath).fieldDelimiter(' ').types(Long.class, Long.class, Long.class);
+
+int keyPosition = 0;
+DeltaIterativeDataSet<Tuple2<Long, Double>, Tuple2<Long, Double>> iteration = initialSolutionSet.iterateDelta(initialDeltaSet, maxIterations, keyPosition);
+
+DataSet<Tuple2<Long, Double>> updateRanks = iteration.join(dependencySetInput).where(0).equalTo(0).with(new PRDependenciesComputationMatchDelta())
+		.groupBy(1).reduceGroup(new UpdateRankReduceDelta());
+
+DataSet<Tuple2<Long, Double>> oldRankComparison = updateRanks.join(iteration.getSolutionSet()).where(0).equalTo(0).with(new RankComparisonMatch());
+
+iteration.closeWith(oldRankComparison, updateRanks).writeAsCsv(outputPath);
 </section>
 
 <section id="annotations">
