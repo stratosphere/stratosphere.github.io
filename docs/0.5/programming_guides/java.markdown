@@ -1030,7 +1030,97 @@ To be written.
 Iteration Operators
 -------------------
 
-To be written.
+Iterations implement loops in Stratosphere programs. The iteration operators encapsulate a part of the program and execute it repeatedly, feeding back the result of one iteration (the partial solution) into the next iteration. There are two types of iterations in Stratosphere: **BulkIteration** and **DeltaIteration**.
+
+This section provides quick examples on how to use both operators. Check out the [Introduction to Iterations]({{site.baseurl}}/docs/0.5/programming_guides/iterations.html) page for a more detailed introduction.as
+
+#### Bulk Iterations
+
+To create a BulkIteration call the `iterate(int)` method of the `DataSet` the iteration should start at. This will return an `IterativeDataSet`, which can be transformed with the regular operators. The single argument to the iterate call specifies the maximum number of iterations.
+
+To specify the end of an iteration call the `closeWith(DataSet)` method on the `IterativeDataSet` to specify which transformation should be fed back to the next iteration. You can optionally specify a termination criterion with `closeWith(DataSet, DataSet)`, which evaluates the second DataSet and terminates the iteration, if this DataSet is empty. If no termination criterion is specified, the iteration terminates after the given maximum number iterations.
+
+The following example iteratively estimates the number Pi. The goal is to count the number of random points, which fall into the unit circle. In each iteration, a random point is picked. If this point lies inside the unit circle, we increment the count. Pi is then estimated as the resulting count divided by the number of iterations multiplied by 4.
+
+{% highlight java %}
+final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+
+// Create initial IterativeDataSet
+IterativeDataSet<Integer> initial = env.fromElements(0).iterate(10000);
+
+DataSet<Integer> iteration = initial.map(new MapFunction<Integer, Integer>() {
+    @Override
+    public Integer map(Integer i) throws Exception {
+        double x = Math.random();
+        double y = Math.random();
+
+        return i + ((x * x + y * y < 1) ? 1 : 0);
+    }
+});
+
+// Iteratively transform the IterativeDataSet
+DataSet<Integer> count = initial.closeWith(iteration);
+
+count.map(new MapFunction<Integer, Double>() {
+    @Override
+    public Double map(Integer count) throws Exception {
+        return count / (double) 10000 * 4;
+    }
+}).print();
+
+env.execute("Iterative Pi Example");
+{% endhighlight %}
+
+You can also check out the [K-Means example](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/clustering/KMeans.java), which uses a BulkIteration to cluster a set of unlabeled points.
+
+#### Delta Iterations
+
+Delta iterations exploit the fact that certain algorithms do not change every data point of the solution in each iteration.
+
+In addition to the partial solution that is fed back (called workset) in every iteration, delta iterations maintain state across iterations (called solution set), which can be updated through deltas. The result of the iterative computation is the state after the last iteration. Please refer to the [Introduction to Iterations]({{site.baseurl}}/docs/0.5/programming_guides/iterations.html) for an introduction to the basic principle of delta iterations.
+
+Defining a DeltaIteration is similar to defining a BulkIteration. For delta iterations, two data sets form the input to each iteration (workset and solution set), and two data sets are produced as the result (new workset, solution set delta) in each iteration. 
+
+To create a DeltaIteration call the `iterateDelta(DataSet, int, int)` (or `iterateDelta(DataSet, int, int[])` respectively). This method is called on the initial solution set. The arguments are the initial delta set, the maximum number of iterations and the key positions. The returned `DeltaIterativeDataSet` can be used for operators inside the iteration and represents the work set. You can access the solution set by joining with the returned DataSet from `iteration.getSolutionSet()`.
+
+{% highlight java %}
+DataSet<Tuple2<Long, Double>> initialSolutionSet = env
+    .readCsvFile(solutionSetInputPath)
+    .fieldDelimiter(' ')
+    .types(Long.class, Double.class);
+
+DataSet<Tuple2<Long, Double>> initialDeltaSet = env
+    .readCsvFile(deltasInputPath)
+    .fieldDelimiter(' ')
+    .types(Long.class, Double.class);
+
+DataSet<Tuple3<Long, Long, Long>> dependencySetInput = env
+    .readCsvFile(dependencySetInputPath)
+    .fieldDelimiter(' ')
+    .types(Long.class, Long.class, Long.class);
+
+int maxIterations = 100;
+int keyPosition = 0;
+
+DeltaIterativeDataSet<Tuple2<Long, Double>, Tuple2<Long, Double>> iteration = initialSolutionSet
+    .iterateDelta(initialDeltaSet, maxIterations, keyPosition);
+
+DataSet<Tuple2<Long, Double>> updateRanks = iteration
+    .join(dependencySetInput)
+    .where(0)
+    .equalTo(0)
+    .with(new PRDependenciesComputationMatchDelta())
+    .groupBy(1)
+    .reduceGroup(new UpdateRankReduceDelta());
+
+DataSet<Tuple2<Long, Double>> oldRankComparison = updateRanks
+    .join(iteration.getSolutionSet())
+    .where(0)
+    .equalTo(0)
+    .with(new RankComparisonMatch());
+
+iteration.closeWith(oldRankComparison, updateRanks).writeAsCsv(outputPath);
+{% endhighlight %}
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
