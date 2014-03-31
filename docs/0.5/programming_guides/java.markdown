@@ -259,12 +259,47 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 Annotations
 -----------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Annotations allow the user to specify constant fields between input and output data of a user defined operator. The user can give these semantic hints by annotating the operator classes. A field is considered constant if its value is not modified and its position remains the same.
+
+Currently, the usage of annotations is only possible with operators working on the `Tuple` classes as input and output types. Custom object support will be added in the future.
+
+The following annotations are available:
+
+* `@ConstantFields`: constant fields of a single input operator (like map).
+
+* `@ConstantFieldsFirst`: constant fields for the first input of a two input operator (like join).
+
+* `@ConstantFieldsSecond`: constant fields for the second input of a two input operator (like join).
+
+* `@AllFieldsConstant`: all fields remain constant, no field is modified.
+
+* `@ConstantFieldsExcept`: all fields of a single input operator except the given ones are constant.
+
+* `@ConstantFieldsFirstExcept`: all fields of the first input of a two input operator except the given ones are constant.
+
+* `@ConstantFieldsSecondExcept`: all fields of the second input of a two input operator except the given ones are constant.
+
+**Note**: It is important to be strict when providing annotations. Only annotate fields, when you are certain that they are constant. If the behaviour of the operator is not clearly predictable, no annotation should be provided.
+
+**Example**
+
+The following example shows a simple map operator, which works on `Tuple2` types. It calculates the square of the first field. Since only field one is ever modified, all other fields are considered constant.
+
+{% highlight java %}
+@ConstantFields(fields={0})
+public static final class Square extends
+    FlatMapFunction<Tuple2<String, Integer>, Tuple2<String, Integer>> {
+
+    @Override
+    public void flatMap(Tuple2<String, Integer> value, Collector<Tuple2<String, Integer>> out) {
+        Integer i = value.getField(1);
+        value.setField(i*i, 1);
+
+        out.collect(value);
+    }
+}
+{% endhighlight %}
+
 </section>
 
 <section id="broadcast_variables">
