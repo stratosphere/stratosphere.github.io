@@ -48,17 +48,40 @@ cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 </section>
 
-<section id="linking">
-Linking
--------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+<section id="linking">
+Linking with Stratosphere
+-------------------------
+
+To write programs with Stratosphere, you need to include Stratosphere’s Java API library in your project. 
+
+The simplest way to do this is to use the [quickstart scripts]({{site.baseurl}}/quickstart/java.html). They create a blank project from a Maven Archetype (think of it as a template), which sets up everything for you. To manually create the project, you can use the archetype and create a project by calling:
+
+{% highlight bash %}
+mvn archetype:generate /
+    -DarchetypeGroupId=eu.stratosphere /
+    -DarchetypeArtifactId=quickstart-java /
+    -DarchetypeVersion={{site.current_stable}}
+{% endhighlight %}
+
+If you want to add Stratosphere to an existing Maven project, add the following entry to your *dependencies* in the *pom.xml* file of your project:
+
+{% highlight xml %}
+<dependency>
+  <groupId>eu.stratosphere</groupId>
+  <artifactId>stratosphere-java</artifactId>
+  <version>{{site.current_stable}}</version>
+</dependency>
+<dependency>
+  <groupId>eu.stratosphere</groupId>
+  <artifactId>stratosphere-clients</artifactId>
+  <version>{{site.current_stable}}</version>
+</dependency>
+{% endhighlight %}
+
+The second dependency is only necessary for a local execution context. You only need to include it, if you want to execute Stratosphere programs on your local machine (for example for testing or debugging).
 </section>
+
 
 <section id="skeleton">
 Skeleton Program
