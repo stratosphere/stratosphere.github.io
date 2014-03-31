@@ -148,12 +148,41 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 Annotations
 -----------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Annotations allow the user to specify constant fields
+between input and output data of a user defined operator. The user can give stratosphere these semantic hints
+by annotating the operator classes he implements. A field is considered constant if its value is not modified and its position remains the same. The usage
+of annotations is currently only possible with operator in- and output of class ```Tuple```. Custom object support will be added in the future.
+Currently, the following annotations are available:
+
+* ```@ConstantFields```: This annotation specifies the fields that are definitely constant in input and output. This annotation should only
+be used on operators with single input.
+* ```@ConstantFieldsFirst```: Specifies the fields that are constant for the first input. This annotation should only be used with with double-input operators.
+* ```@ConstantFieldsSecond```: Specifies the fields that are constant for the second input. This annotation should only be used with double-input operators.
+* ```@AllFieldsConstant```: Specifies that no field is modified between input and output, all fields remain constant.
+* ```@ConstantFieldsExcept```: Specifies that all fields except the given ones are constant. This annotation should only be used with single-input operators.
+* ```@ConstantFieldsFirstExcept```: Specifies that all fields of the first input except the given ones are constant. This annotation should only be used with double-input operators.
+* ```@ConstantFieldsSecondExcept```: Specifies that all fields of the second input except the given ones are constant. This annotation should only be used with double-input operators.
+
+Note: It is extremely important to follow a strict strategy when annotating constant fields. Only fields that are always constant should be specified. If the behaviour is not clearly predictable,
+no annotation should be provided.
+
+___Example:___
+The following example shows a simple map operator that calculates the square of the first field. Since only field one is ever modified, all other fields are considered constant.
+
+    @ConstantFieldsExcept(fields={1})
+    public static final class Square 
+    extends FlatMapFunction<Tuple2<String, Integer, Date>, Tuple2<String, Integer, Date>> {
+    		@Override
+    		public void flatMap(Tuple2<String, Integer, Date> value, 
+    		Collector<Tuple2<String, Integer, Date>> out) {
+    			Integer i = value.getField(1);
+    			value.setField(i*i, 1);
+    			out.collect(value);
+    		}
+    	}
+    }
+
+
 </section>
 
 <section id="broadcast_variables">
