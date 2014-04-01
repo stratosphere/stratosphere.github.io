@@ -164,12 +164,80 @@ how you created the execution environment.
 Data Types
 ----------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+The Stratosphere Java API allows the use of many different data types for the input and output of operators. Data sets as well as functions 
+like `MapFunction`, `ReduceFunction`, etc. are parameterized with data types (using Java generics) in order to ensure type-safe programming.
+
+Basically, there are four different categories of data types:
+
+- Java Basic Types
+- Tuples
+- Custom Types
+- Values
+
+All data types are described in the following sections.
+
+### Java Basic Types
+
+As already shown in the [Skeleton Program](#skeleton) section, data sets and functions can handle the basic Java data types e.g. `DataSet<String>`. The API supports all common basic Java data types such as `Integer`, `Long`, `Double`, `Float`, `Boolean`, `Byte`, `Character`, `Short` and `String`.
+
+### Tuples
+
+The API provides classes reaching from `Tuple1` up to `Tuple22` that allow for ordered lists of elements (=*a data structure with multiple fields*). An element of a Tuple can be every Stratosphere data type. Nesting of Tuples is also possible. However, in order to ensure type-safety, Tuples always need to be parameterized (using Java generics). The following code snippet shows an example of how to use Tuples:
+
+```java
+// Map function to convert a String to a Tuple containing the String and its length
+MapFunction<?, ?> function = new MapFunction<String, Tuple2<String, Integer>>() {
+
+    @Override
+    public Tuple2<String, Integer> map(String in) throws Exception {
+        return new Tuple2<String, Integer>(in, in.length());
+    }
+};
+
+// DataSet from an CSV file
+DataSet<Tuple2<Integer, String>> nations = env.readCsvFile(tpchNation)
+                                            .fieldDelimiter('|')
+                                            .includeFields("1100")
+                                            .types(Integer.class, String.class);
+```
+
+Fields of a Tuple can be accessed directly by using `tuple.f4` or `tuple.getField(4)`. In order to access fields 
+more intuitively and generate more readable code, it is also possible to extend a subclass of `Tuple` and add getters and setters with custom names.
+
+### Custom Types
+
+Custom Types allow for using custom Java classes as data types. A Custom Type can also be used within tuples. The following code snippet shows an example of a Custom Type and its usage. Since functions like the `ReduceFunction` or `JoinFunction` currently only support the definition of Tuple fields as keys, a special `KeySelector` needs to be implemented to specify the key for a Custom Type.
+
+```java
+public static class MyCustomType {
+    public String word;
+    public int count;
+		
+    public MyCustomType() {}
+
+    public MyCustomType(String word, int count) {
+        this.word = word;
+        this.count = count;
+    }
+
+    @Override
+    public String toString() {
+        return "(" + word + ", " + count + ")";
+    }
+}
+
+// [...]
+
+DataSet<CustomType> dataSet = data
+                               .groupBy(new KeySelector<WC, String>() { public String getKey(MyCustomType v) { return v.word; } })
+			       .reduce(reduceFunction);
+```
+
+
+### Values
+
+Stratosphere Values are serializable types which act as a wrapper around Java basic data types and collections implementing the Java `List` or `Map` interfaces. Currently the API supports `IntValue`, `LongValue`, `DoubleValue`, `FloatValue`, `BooleanValue`, `ByteValue`, `CharValue`, `ShortValue`, `StringValue`, `ListValue` and `MapValue`. In most cases Tuples and Basic Types should be preferred to Values.
+
 </section>
 
 <section id="transformations">
@@ -248,12 +316,40 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 Broadcast Variables
 -------------------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Broadcast Variables allow to broadcast computation results to all nodes executing an operator. The following example shows how to set a broadcast variable and how to access it within an operator.
+
+{% highlight java %}
+
+DataSet<String> text = env.readTextFile(inputPath1);
+
+DataSet<Integer> someBcInput = env.readCsvFile(inputPath2)
+                                .includeFields("100")
+                                .types(Integer.class);
+
+// custom map function which accesses a broadcast variable
+DataSet<String> output = text.map(new MapFunction<String, String>>() {
+
+    private Collection<Integer> myBcData;
+
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        // receive the variables' content
+        this.myBcData = this.getRuntimeContext().<Integer>getBroadcastVariable("my_bc_var"); 
+    }
+
+    @Override
+    public Tuple2<String, Integer> map(String in) throws Exception {
+        for (Integer i : myBcData) {
+       	   // do something with the data
+       }
+    }
+});
+
+output.withBroadcastSet(someBcInput, "my_bc_var"); // set the variable
+{% endhighlight %}
+*Note*: As the content of broadcast variables is kept in-memory on each node, it should not become too large. For simpler things like scalar values you should use `withParameters(...)`.
+
+An example of how to use Broadcast Variables in practice can be found in the ```eu.stratosphere.example.java.broadcastvar.BroadcastVariableExample``` class.
 </section>
 
 <section id="packaging">
