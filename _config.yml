@@ -25,4 +25,5 @@ current_stable_sopremo: "https://github.com/stratosphere/stratosphere-sopremo/re
 current_stable_documentation: "0.4"
 
 docs_05_stable: "0.5-SNAPSHOT"
+docs_05_stable_gh_tag: "master"
 docs_05_yarn_archive: "http://stratosphere-bin.s3-website-us-east-1.amazonaws.com/stratosphere-dist-0.5-SNAPSHOT-yarn.tar.gz"
