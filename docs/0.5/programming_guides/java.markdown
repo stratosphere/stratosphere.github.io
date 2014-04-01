@@ -228,10 +228,25 @@ You have the choice to implement either [Accumulator](https://github.com/stratos
 Execution Plans
 ---------------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Stratosphere separates the programming and execution of jobs. Depending on various parameters such as number of machines in the cluster or input data size, stratosphere
+chooses an execution strategy. In many cases, it can be useful to know how exactly stratosphere executes your job.
+
+___Plan Visualization Tool___
+
+Stratosphere builds 0.5 and upwards are packaged together with a visualization tool for execution plans. The HTML document containing the visualizer is located under ```tools/planVisualizer.html```. It takes a JSON representation of the job execution plan. The following code show how to print the job execution plan directly from your job.
+
+    final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+    
+    ...
+    
+    System.out.println(env.getExecutionPlan());
+
+Open the ```planVisualizer.html``` document with a browser of your choice and paste the JSON string into the text field. After pressing the draw button, a detailed execution plan will be visualized.
+
+![alt text](http://stratosphere.eu/img/blog/plan_visualizer2.png "A stratosphere job execution graph.")
+
+___Web Interface___
+
+Stratosphere offers a web interface for submitting and executing jobs. This webinterface also optionally visualizes the job execution plan. The script to start the webinterface is located under ```bin/start-webclient.sh```. After starting the webclient a stratosphere job can be uploaded and will be added to the list of available jobs on the left side of the interface. You are able to specify additional arguments in the given textbox. Checking the plan visualization checkbox shows the execution plan before executing the actual job.
+
 </section>
