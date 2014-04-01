@@ -8,7 +8,20 @@ sublinks:
   - {anchor: "background", title: "Background"}
 ---
 
-## Stratosphere on YARN
+### Stratosphere on YARN `tl;dr`
+
+```bash
+#download YARN package
+wget {{site.current_stable_uberjar}}
+#extract it
+tar xvzf stratosphere-dist-0.5-SNAPSHOT-yarn.tar.gz
+cd stratosphere-yarn-0.5-SNAPSHOT/
+# start YARN session with 4 Taskmanagers (each 3GB of Heapspace)
+./bin/yarn-session.sh -n 4 -jm 1024 -tm 3000
+```
+
+
+## Introducing YARN
 
 Apache [Hadoop YARN](http://hadoop.apache.org/) is a cluster resource management framework. It allows to run various distributed applications on top of a cluster. Stratosphere runs on YARN next to other applications. So users do not have to setup or install anything if there is already a YARN setup.
 
@@ -24,36 +37,39 @@ Apache [Hadoop YARN](http://hadoop.apache.org/) is a cluster resource management
 <section id="session">
 ### Start Stratosphere Session
 
-Follow these instructions to learn how to lauch a Stratosphere Session within your YARN cluster. A session will start all required Stratosphere services (JobManager and TaskManagers) so that you can submit jobs to the cluster. Note that you can submit multiple jobs per session.
+Follow these instructions to learn how to launch a Stratosphere Session within your YARN cluster. A session will start all required Stratosphere services (JobManager and TaskManagers) so that you can submit jobs to the cluster. Note that you can run multiple jobs per session.
 
-#### Get Stratosphere Uber-Jar
+#### Download Stratosphere for YARN
 
-You only need one file to run Stratosphere on YARN, the <i>Stratosphere Uber-Jar</i>. Download the Uber-jar on the [download page]({{site.baseurl}}/downloads/#bin).
+Download the YARN tgz package on the [download page]({{site.baseurl}}/downloads/#bin). It contains the required files.
 
 
-If you want to build the uber-jar from sources, follow the build instructions. Make sure to use the `-Dhadoop.profile=2` profile. You can find the Jar file in `stratosphere-dist/target/stratosphere-dist-{{site.current_snapshot}}-yarn-uberjar.jar` (*Note: The version might be different for you* ).
+If you want to build the YARN tgz file from sources, follow the build instructions. Make sure to use the `-Dhadoop.profile=2` profile. You can find the file in `stratosphere-dist/target/stratosphere-dist-{{site.current_snapshot}}-yarn.tar.gz` (*Note: The version might be different for you* ).
 
-### Deploy
+Extract the package using
+```
+tar xvzf stratosphere-dist-0.5-SNAPSHOT-yarn.tar.gz
+cd stratosphere-yarn-0.5-SNAPSHOT/
+```
 
-Invoke the Jar file using the following command:
+
+### Start a Session
+
+Use the following command to start a session
 
 ```bash
-java -jar stratosphere-dist-{{site.current_stable}}-yarn-uberjar.jar
+./bin/yarn-session.sh
 ```
 
 This command will show you the following overview:
 
 ```bash
-java -jar stratosphere-dist-{{site.current_stable}}-yarn-uberjar.jar 
 Usage:
    Required
      -n,--container <arg>   Number of Yarn container to allocate (=Number of TaskTrackers)
    Optional
-     -c,--conf <arg>                 Path to Stratosphere configuration file
-     -g,--generateConf               Place default configuration file in current directory
-     -j,--jar <arg>                  Path to Stratosphere jar file
      -jm,--jobManagerMemory <arg>    Memory for JobManager Container [in MB]
-     -q,--query                      Display avilable YARN resources (memory, cores)
+     -q,--query                      Display available YARN resources (memory, cores)
      -qu,--queue <arg>               Specify YARN queue.
      -tm,--taskManagerMemory <arg>   Memory per TaskManager Container [in MB]
      -tmc,--taskManagerCores <arg>   Virtual CPU cores per TaskManager
@@ -65,11 +81,11 @@ Please note that the Client requires the `HADOOP_HOME` (or `YARN_CONF_DIR` or `H
 **Example:** Issue the following command to allocate 10 TaskTrackers, with 8GB of memory each:
 
 ```bash
-java -jar stratosphere-dist-{{site.current_stable}}-yarn-uberjar.jar -n 10 -tm 8192
+./bin/yarn-session.sh -n 10 -tm 8192
 ```
 
 
-The jar will automatically create a `stratosphere-config.yml` in the local directory and use this, if no config file has been specified. Please follow our [configuration guide]({{site.baseurl}}/docs/0.4/setup/config.html) if you want to change something. Stratosphere on YARN will overwrite the following configuration parameters `jobmanager.rpc.address` (because the JobManager is always allocated at different machines) and `taskmanager.tmp.dirs` (we are using the tmp directories given by YARN).
+The system will use the configuration in `conf/stratosphere-config.yml`. Please follow our [configuration guide]({{site.baseurl}}/docs/0.5/setup/config.html) if you want to change something. Stratosphere on YARN will overwrite the following configuration parameters `jobmanager.rpc.address` (because the JobManager is always allocated at different machines) and `taskmanager.tmp.dirs` (we are using the tmp directories given by YARN).
 
 The example invocation starts 11 containers, since there is one additional container for the ApplicationMaster and JobTracker.
 
@@ -77,6 +93,7 @@ Once Stratosphere is deployed in your YARN cluster, it will show you the connect
 
 The client has to remain open to keep the deployment intact. We suggest to use `screen`. It will start another shell that is detachable.
 So open `screen`, start Stratosphere on YARN, use `CTRL+a` then press `d` to detach the screen session. Use `screen -r` to resume again.
+
 </section>
 
 <section id="submission">
@@ -86,16 +103,12 @@ So open `screen`, start Stratosphere on YARN, use `CTRL+a` then press `d` to det
 Use the following command to submit a Stratosphere job to the YARN cluster:
 
 ```
-java -cp stratosphere-dist-{{site.current_stable}}-yarn-uberjar.jar eu.stratosphere.client.CliFrontend
-```
-
-If you have Stratosphere installed from a custom build or a zip file, use the [commandline client]({{site.baseurl}}/docs/0.4/program_execution/cli_client.html):
-
-```
 ./bin/stratosphere
-``` 
+```
 
-Both commands will show you a help like this:
+Please refer to the documentation of the [commandline client]({{site.baseurl}}/docs/0.4/program_execution/cli_client.html).
+
+The command will show you a help menu like this:
 
 ```
 [...]
@@ -109,7 +122,7 @@ Action "run" compiles and submits a Stratosphere program.
 [...]
 ```
 
-Use the *run* action to submit a job to YARN. The uberjar will show you the address of the JobManager in the console.
+Use the *run* action to submit a job to YARN. The client is able to determine the address of the JobManager. In the rare event of a problem, you can also pass the jobManager address using the `-m` argument. The JobManager address is visible in the YARN console.
 
 **Example**
 
@@ -117,12 +130,20 @@ Use the *run* action to submit a job to YARN. The uberjar will show you the addr
 # Optionally download some sample data first
 wget -O apache-license-v2.txt http://www.apache.org/licenses/LICENSE-2.0.txt
 # Submit Job to Stratosphere
-./bin/stratosphere run -m localhost:6123 \
-                       -j ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
+./bin/stratosphere run -j ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
                        -a 1 file://`pwd`/apache-license-v2.txt file://`pwd`/wordcount-result.txt 
 ```
 
-You can use also script without the `-m` (or `--jobmanager`) argument, but you have to configure the `stratosphere-conf.yaml` with the correct JobManager details.
+If there is the following error: 
+
+```
+Exception in thread "main" eu.stratosphere.compiler.CompilerException: Available instances could not be determined from job manager: Connection timed out.
+```
+
+Make sure that all TaskManagers started. You can check the number of TaskManagers in the JobManager web interface. The address of this interface is printed in the YARN session console.
+
+If the TaskManagers do not show up after a minute, you should investigate the issue using the logfiles.
+
 </section>
 
 <section id="build">
@@ -139,15 +160,22 @@ ERROR: The job was not successfully submitted to the nephele job manager: eu.str
 **Example**
 
 ```
-mvn -Dhadoop.profile=2 -Pcdh-repo -Dhadoop.version=2.0.0-cdh4.2.0 -P\!include-yarn -DskipTests package
+mvn -Dhadoop.profile=2 -Pcdh-repo -Dhadoop.version=2.2.0-cdh5.0.0-beta-2 -DskipTests package
 ```
 
 The commands in detail:
 
 *  `-Dhadoop.profile=2` activates the Hadoop YARN profile of Stratosphere. This will enable all components of Stratosphere that are compatible with Hadoop 2.2
 *  `-Pcdh-repo` activates the Cloudera Hadoop dependencies. If you want other vendor's Hadoop dependencies (not in maven central) add the repository to your local maven configuration in `~/.m2/`.
-* `-Dhadoop.version=2.0.0-cdh4.2.0` sets a special version of the Hadoop dependencies. Make sure that the specified Hadoop version is compatible with the profile you activated (non-YARN probably need `-Dhadoop.profile=1`)
-* `-P!include-yarn` this command disables YARN in Stratosphere. This is required in this case because the Hadoop version we are using here `2.0.0-cdh4.2.0` is using the old YARN interface. As stated above, we expect Hadoop 2.2 (but Hadoop 2.1-betas might also work since they use the new APIs.)
+* `-Dhadoop.version=2.2.0-cdh5.0.0-beta-2` sets a special version of the Hadoop dependencies. Make sure that the specified Hadoop version is compatible with the profile you activated (non-YARN probably need `-Dhadoop.profile=1`)
+
+If you want to build HDFS for Hadoop 2 without YARN, use the following parameter:
+
+```
+-P!include-yarn
+```
+
+Some Cloudera versions (such as `2.0.0-cdh4.2.0`) require this, since they have a new HDFS version with the old YARN API.
 
 Please post to the [Stratosphere mailinglist](https://groups.google.com/d/forum/stratosphere-users) or create an issue on [Github](https://github.com/stratosphere/stratosphere/issues), if you have issues with your YARN setup and Stratosphere.
 
