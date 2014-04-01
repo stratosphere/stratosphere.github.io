@@ -199,12 +199,532 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 Data Transformations
 --------------------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Data transformations transform one or more `DataSet`s into another `DataSet`. Advanced data analysis programs can be constructed by chaining multiple transformations.
+
+### Map
+
+The Map transformation applies a user-defined `MapFunction` on each element of a DataSet.</br>
+A `MapFunction` returns exactly one result element for each input element.
+
+The following code transforms a `DataSet` of Integer pairs into a `DataSet` of Integers:
+
+```java
+// Map function that adds two integer values
+public class IntAdder extends MapFunction<Tuple2<Integer, Integer>, Integer> {
+  @Override
+  public Integer map(Tuple2<Integer, Integer> in) throws Exception {
+    return in.f0 + in.f1;
+  }
+}
+
+// [...]
+DataSet<Tuple2<Integer, Integer>> intPairs = // [...]
+DataSet<Integer> intSums = intPairs.map(new IntAdder());
+```
+
+### FlatMap
+
+The FlatMap transformation applies a user-defined `FlatMapFunction` on each element of a `DataSet`.</br>
+A `FlatMapFunction` can return arbitrary many result elements (including none) for each input element.
+
+The following code transforms a `DataSet` of text lines into a `DataSet` of words:
+
+```java
+// FlatMap function that tokenizes a String by whitespace characters and emits all String tokens.
+public class Tokenizer extends FlatMapFunction<String, String> {
+  @Override
+  public void flatMap(String value, Collector<String> out) {
+    for (String token : value.split("\\W")) {
+      out.collect(token);
+    }
+  }
+}
+
+// [...]
+DataSet<String> textLines = // [...]
+DataSet<String> words = textLines.flatMap(new Tokenizer());
+
+```
+
+### Filter
+
+The Filter transformation applies a user-defined `FilterFunction` on each element of a `DataSet` and retains only those elements for which the `FilterFunction` returns `true`.</br>
+
+The following code removes all Integers smaller than zero from a `DataSet`:
+
+```java
+// Filter function that filters out all Integers smaller than zero.
+public class NaturalNumberFilter extends FilterFunction<Integer> {
+  @Override
+  public boolean filter(Integer number) throws Exception {
+    return number >= 0;
+  }
+}
+
+// [...]
+DataSet<Integer> intNumbers = // [...]
+DataSet<Integer> naturalNumbers = intNumbers.filter(new NaturalNumberFilter());
+```
+
+### Project
+
+The Project transformation removes or moves tuple fields of a `Tuple` `DataSet`.</br>
+Projections do not require the definition of a user function.
+
+The following code shows different ways to use the Project transformations:
+
+```java
+DataSet<Tuple3<Integer, Double, String>> in = // [...]
+// use field indexes to remove and move fields
+DataSet<Tuple2<String, Integer>> out1 = in.project(2,0).types(String.class, Integer.class);
+// use field masks to remove fields
+DataSet<Tuple2<Integer, String>> out2 = in.project("101").types(Integer.class, String.class);
+// use field flags to remove fields
+DataSet<Tuple1<Double>> out3 = in.project(false, true, false).types(Double.class)
+```
+
+### Reduce on grouped DataSet
+
+A `DataSet` can be grouped on one or more keys. Keys can be defined in two ways using
+
+- a `KeySelector` function or 
+- one or more field position keys. 
+
+A Reduce transformation that is applied on a grouped `DataSet` reduces each group to a single element using a user-defined `ReduceFunction`.
+For each group of input elements, a `ReduceFunction` successively combines pairs of elements into one element until only a single element for each group remains.
+
+#### Reduce on DataSet grouped by KeySelector Function
+
+A `KeySelector` function extracts a key value from each element of a `DataSet`. The extracted key value is used to group the `DataSet`.
+The following code shows how to group and reduce a POJO `DataSet` using a `KeySelector` and a `ReduceFunction`.
+
+```java
+// some ordinary POJO
+public class WC {
+  public String word;
+  public int count;
+  // [...]
+}
+
+// Reduce function that sums Integer attributes of a POJO
+public class WordCounter extends ReduceFunction<WC> {
+  @Override
+  public WC reduce(WC in1, WC in2) throws Exception {
+    return new WC(in1.word, in1.count + in2.count);
+  }
+}
+
+// [...]
+DataSet<WC> words;
+DataSet<WC> wordCounts = words = // [...]
+                          // DataSet grouping with inline-defined KeySelector function 
+                          .groupBy(
+                            new KeySelector<WC, String>() { 
+                              public String getKey(WC wc) { return wc.word; } 
+                            })
+                          // reduce on grouped DataSet
+                          .reduce(new WordCounter());
+```
+
+#### Reduce on DataSet grouped by Field Position Keys (Tuple DataSets only)
+
+Field position keys specify one or more fields of a `Tuple` `DataSet` that are used as grouping keys.</br>
+The following code shows how to use field position keys and apply a `ReduceFunction`.
+
+```java
+// Some Reduce function definition
+public class MyTupleReducer extends ReduceFunction<Tuple3<String, Integer, Double>> {
+  // [...]
+}
+
+// [...]
+DataSet<Tuple3<String, Integer, Double>> tuples = // [...]
+DataSet<Tuple3<String, Integer, Double>> reducedTuples = 
+                                         tuples
+                                         // group DataSet on first and second field of Tuple
+                                         .groupBy(0,1)
+                                         // reduce on grouped DataSet
+                                         .reduce(new MyTupleReducer());
+```
+
+#### Reduce on sorted groups (Tuple DataSets only)
+
+The elements within a group can be sorted using the GroupSort feature. Right now, GroupSort is only supported for `Tuple` `DataSet`s.
+
+```java
+// Some Reduce function definition
+public class MyTupleReducer extends ReduceFunction<Tuple3<String, Integer, Double>> {
+  // [...]
+}
+
+DataSet<Tuple3<String, Integer, Double>> tuples = // [...]
+DataSet<Tuple3<String, Integer, Double>> reducedTuples = 
+                                         tuples
+                                         // group dataset on first tuple field
+                                         .groupBy(0)
+                                         // sort groups on second tuple field in descending order
+                                         .sortGroup(1, Order.DESCENDING)
+                                         // reduce on grouped dataset
+                                         .reduce(new MyTupleReducer());
+```
+
+### GroupReduce on grouped DataSet
+
+A `DataSet` can be grouped on one or more keys. Keys can be defined in two ways using
+
+- a `KeySelector` function or 
+- one or more field position keys. 
+
+A GroupReduce transformation that is applied on a grouped `DataSet` calls user-defined `GroupReduceFunction` for each group.</br>
+A `GroupReduceFunction` is called once for each group with an iterator over all elements of the group and can return an arbitrary number of result elements.
+
+For the sake of brevity, we only show the GroupReduce transformation with grouping by field position keys. The usage of a key selection function and group sorting is analogous to the Reduce transformation.
+
+#### GroupReduce on DataSet grouped by Field Position Keys (Tuple DataSets only)
+
+***GOOD EXAMPLE REQUIRED HERE***
+
+```java
+// Some Reduce function definition **Good example required**
+public class MyTupleReducer extends GroupReduceFunction<Tuple3<String, Integer, Double>, Double> {
+  // [...]
+}
+
+// [...]
+DataSet<Tuple3<String, Integer, Double>> input = // [...]
+DataSet<Double> output = input
+                         // group dataset by the second tuple field
+                         .groupBy(1)
+                         // apply GroupReduce function on each group
+                         .reduceGroup(new MyTupleReducer());
+```
+
+#### GroupReduce on DataSet grouped by KeySelector Function
+
+Works analogous to `KeySelector` functions in Reduce transformations.
+
+#### GroupReduce on sorted groups (Tuple DataSets only)
+
+Works analogous to group sortings in Reduce transformations.
+
+#### Combinable GroupReduce Functions
+
+In contrast to a `ReduceFunction`, a `GroupReduceFunction` is not implicitly combinable. In order to make a `GroupReduceFunction` combinable, you need to implement (override) the ```combine()``` method and annotate the `GroupReduceFunction` with the ```@Combinable``` annotation as shown here:
+
+***GOOD EXAMPLE REQUIRED HERE***
+
+```java
+// Combinable GroupReduce function that
+@Combinable
+public class MyCombinableGroupReducer extends GroupReduceFunction<Integer, Integer> {
+  @Override
+  public void reduce(Iterator<Integer> in, Collector<Integer> out) throws Exception {
+    // [...]
+  }
+
+  @Override
+  public void combine(Iterator<Integer> in, Collector<Integer> out) throws Exception {
+    // Good example required here
+    // this.reduce(in, out);
+  }
+}
+```
+
+### Reduce on full DataSet
+
+The Reduce transformation applies a user-defined `ReduceFunction` to all elements of a `DataSet`.</br>
+The `ReduceFunction` subsequently combines pairs of elements into one element until only a single element remains.
+
+The following example shows how to sum all elements in an Integer `DataSet`:
+
+```java
+// Reduce function that sums Integers
+public class IntSummer extends ReduceFunction<Integer> {
+  @Override
+  public Integer reduce(Integer num1, Integer num2) throws Exception {
+    return num1 + num2;
+  }
+}
+
+// [...]
+DataSet<Integer> intNumbers = // [...]
+DataSet<Integer> sum = intNumbers.reduce(new IntSummer());
+```
+
+Reducing a full `DataSet` using the Reduce transformation implies that the final Reduce operation cannot be done in parallel. However, a `ReduceFunction` is automatically combinable such that a Reduce transformation does not limit scalability for most use cases.
+
+### GroupReduce on full DataSet
+
+The GroupReduce transformation applies a user-defined `GroupReduceFunction` on all elements of a `DataSet`.</br>
+A `GroupReduceFunction` can iterate over all elements of `DataSet` and return an arbitrary number of result elements.
+
+***GOOD EXAMPLE REQUIRED HERE***
+
+```java
+// GroupReduce function definition that ... (Good example required here)
+public class ABC extends GroupReduceFunction<Integer, Double> {
+
+  @Override
+  public void reduce(Iterator<Integer> in, Collector<Double> out) throws Exception {
+    // [...]
+  }
+}
+
+// [...]
+DataSet<Integer> input = // [...]
+DataSet<Double> output = input.reduceGroup(new ABC());
+```
+
+### Aggregate
+
+***TO BE DONE!***
+
+Sum, Min, Max, Avg (note computations preserve type for AVG)
+
+### Join
+
+The Join transformation joins two `DataSet`s into one `DataSet`. Elements of `DataSet`s are joined on one or more keys which can be specified using 
+
+- a `KeySelector` function or 
+- one or more field position keys. 
+
+There are a few different ways to perform a Join transformation which are shown in the following.
+
+#### Join into Tuple2 (Default Join)
+
+The default join transformation produces a new `DataSet` of `Tuple`s with two fields. Each tuple holds a joined element of the first input `DataSet` in the first tuple field and a matching element of the second input `DataSet` in the second field.
+The following example shows a default join using field position keys:
+
+```java
+DataSet<Tuple2<Integer, String>> input1 = // [...]
+DataSet<Tuple2<Double, Integer>> input2 = // [...]
+// result dataset is typed as Tuple2
+DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Double, Integer>>> 
+            result =
+            input1.join(input2)
+                  // key definition on first input using a field position key
+                  .where(0)
+                  // key definition of second input using a field position key
+                  .equalTo(1);
+```
+
+#### Join with JoinFunction
+
+A Join transformation can also call a user-defined `JoinFunction` to process joining tuples. </br>
+A `JoinFunction` receives one element of the first input `DataSet` and one element of the second input `DataSet` and returns exactly one element.
+
+The following example performs a join of `DataSet` with custom java objects and a `Tuple` `DataSet` using `KeySelector` functions and shows how to call a user-defined `JoinFunction`:
+
+```java
+// some POJO
+public class Rating {
+  public String name;
+  public String category;
+  public int points;
+}
+
+// Join function that joins a custom POJO with a Tuple
+public class PointWeighter 
+         extends JoinFunction<Rating, Tuple2<String, Double>, Tuple2<String, Double>> {
+  
+  @Override
+  public Tuple2<String, Double> join(Rating rating, Tuple2<String, Double> weight) {
+    // multiply the points and rating and construct a new output tuple
+    return new Tuple2<String, Double>(rating.name, rating.points * weight.f1);
+  }
+}
+
+DataSet<Rating> ratings = // [...]
+DataSet<Tuple2<String, Double>> weights = // [...]
+DataSet<Tuple2<String, Double>> 
+            weightedRatings =
+            ratings.join(weights)
+                   // key definition of first input using a KeySelector function
+                   .where(new KeySelection<Rating, String>() { 
+                            public String getKey(Rating r) { return r.category; } 
+                          })
+                   // key definition of second input using a KeySelector function
+                   .equalTo(new KeySelection<Tuple2<String, Double>, String>() {
+                              public String getKey(Tuple2<String, Double> t) { return t.f0; }
+                            })
+                   // applying the JoinFunction on joining pairs
+                   .with(new PointWeighter());
+```
+
+#### Join with Projection (**NOT SUPPORTED YET**)
+
+A Join transformation can construct result tuples using a projection as shown here:
+
+```java
+DataSet<Tuple3<Integer, Byte, String>> input1 = // [...]
+DataSet<Tuple2<Integer, Double>> input2 = // [...]
+DataSet<Tuple4<Integer, String, Double, Byte>
+            result =
+            input1.join(input2)
+                  // key definition on first input using a field position key
+                  .where(0)
+                  // key definition of second input using a field position key
+                  .equalTo(0)
+                  // select and reorder fields of matching tuples
+                  .project(0,2,4,3).types(Integer.class, String.class, Double.class, Byte.class);
+```
+
+For the projection of join results, the field indicies address the fields of the first and the second tuple consecutively. In the above example, indicies 0 to 2 address the first, second, and third field of the first input and 3 and 4 address the first and second field of the second input, respectively. </br>
+The join projection works also on non-`Tuple` `DataSet`s. In this case, the field indicies consider the non-`Tuple` elements as a `Tuple` with a single field.
+
+#### Join with DataSet Size Hint
+
+In order to guide the optimizer to pick the right execution strategy, you can hint the size of `DataSet`s to join as shown here:
+
+```java
+DataSet<Tuple2<Integer, String>> input1 = // [...]
+DataSet<Tuple2<Integer, String>> input2 = // [...]
+
+DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Integer, String>>> 
+            result1 =
+            // hint that the second input is very small
+            input1.joinWithTiny(input2)
+                  .where(0)
+                  .equalTo(0);
+
+DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Integer, String>>> 
+            result2 =
+            // hint that the second input is very large
+            input1.joinWithHuge(input2)
+                  .where(0)
+                  .equalTo(0);
+```
+
+### Cross
+
+The Cross transformation builds all element pair combinations of two `DataSet`s, i.e., it builds the Cartesian product.</br>
+The transformation either calls a user-defined `CrossFunction` on each pair of elements or applies a projection. </br>
+**Note:** Cross is potentially a *very* compute-intensive operation which can challenge even large compute clusters!
+
+#### Cross with User-Defined Function
+
+A Cross transformation can call a `CrossFunction`. A `CrossFunction` receives one element of the first input and one element of the second input and returns exactly one result element. </br>
+Applying a Cross transformation on two `DataSet`s using a `CrossFunction` is done as follows:
+
+```java
+public class Coord {
+  public int id;
+  public int x;
+  public int y;
+}
+
+// CrossFunction computes the distance between two Coord objects.
+public class EuclidianDistComputer 
+         extends CrossFunction<Coord, Coord, Tuple3<Integer, Integer, Double>> {
+  
+  @Override
+  public Tuple3<Integer, Integer, Double> cross(Coord c1, Coord c2) {
+    // compute Euclidian distance of coordinates
+    double dist = Math.sqrt(Math.pow(c1.x - c2.x, 2) + Math.pow(c1.y - c2.y, 2));
+    return new Tuple3<Integer, Integer, Double>(c1.id, c2.id, dist);
+  }
+}
+
+DataSet<Coord> coords1 = // [...]
+DataSet<Coord> coords2 = // [...]
+DataSet<Tuple3<Integer, Integer, Double>> 
+            distances =
+            coords1.cross(coords2)
+                   // apply CrossFunction
+                   .with(new EuclidianDistComputer());
+```
+
+#### Cross with Projection (**NOT SUPPORTED YET**)
+
+A Cross transformation can also construct result tuples using a projection as shown here:
+
+```java
+DataSet<Tuple3<Integer, Byte, String>> input1 = // [...]
+DataSet<Tuple2<Integer, Double>> input2 = // [...]
+DataSet<Tuple4<Integer, Byte, Integer, Double>
+            result =
+            input1.cross(input2)
+                  // select and reorder fields of matching tuples
+                  .project(3,1,0,4).types(Integer.class, Byte.class, Integer.class, Double.class);
+```
+
+The field selection in a Cross projection works the same way as in the projection of Join results.
+
+#### Cross with DataSet Size Hint
+
+In order to guide the optimizer to pick the right execution strategy, you can hint the size of `DataSet`s to cross as shown here:
+
+```java
+DataSet<Tuple2<Integer, String>> input1 = // [...]
+DataSet<Tuple2<Integer, String>> input2 = // [...]
+
+DataSet<Tuple4<Integer, String, Integer, String>>
+            udfResult =
+            // hint that the second input is very small
+            input1.crossWithTiny(input2)
+            // apply any Cross function (or projection)
+                  .with(new MyCrosser());
+
+DataSet<Tuple3<Integer, Integer, String>> 
+            projectResult =
+            // hint that the second input is very large
+            input1.crossWithHuge(input2)
+            // apply a projection (or any Cross function)
+                  .project(0,2,1).types(Integer.class, Integer.class, String.class)
+```
+
+### CoGroup
+
+The CoGroup transformation jointly processes groups of two `DataSet`s. Both `DataSet`s are grouped on a defined key and groups of both `DataSet`s with the same key are handed together to a user-defined `CoGroupFunction`. If only one `DataSet` has a group for a certain key, the `CoGroupFunction` is called with the existing group and an empty group.</br>
+A `CoGroupFunction` can separately iterate over the elements of both groups and return an arbitrary number of result elements.
+
+Similar to Reduce, GroupReduce, and Join, keys can be defined using
+
+- a `KeySelector` function or 
+- one or more field position keys.
+
+#### CoGroup on DataSets grouped by Field Position Keys (Tuple DataSets only)
+
+```java
+// Some CoGroup function definition
+public class MyCoGrouper
+         extends CoGroupFunction<Tuple2<String, Integer>, Tuple2<String, Double>, Double> {
+  @Override
+  public void coGroup(Iterator<Tuple2<String, Integer>> iVals, 
+                      Iterator<Tuple2<String, Double>> dVals, 
+                      Collector<Double> out) {
+    HashSet<Integer> ints = new HashSet<Integer>();
+    // remove duplicate int values in group
+    while(iVals.hasNext()) {
+      ints.add(iVals.next().f1);
+    }
+    // multiply each double value with each unique int values of group
+    while(dVals.hasNext()) {
+      for(Integer i : ints) {
+        out.collect(dVals.next().f1 * i));
+      }
+    }
+  }
+}
+
+// [...]
+DataSet<Tuple2<String, Integer>> iVals = // [...]
+DataSet<Tuple2<String, Double>> dVals = // [...]
+DataSet<Double> output = iVals.coGroup(dVals)
+                         // group first input on first tuple field
+                         .where(0)
+                         // group second input on first tuple field
+                         .equalTo(0)
+                         // apply CoGroup function on each pair of groups
+                         .reduceGroup(new MyCoGrouper());
+```
+
+#### CoGroup on DataSets grouped by Key Selector Function
+
+Works analogous to key selector functions in Join transformations.
+
+### Union (**NOT SUPPORTED YET**)
+
 </section>
 
 <section id="data_sources">
