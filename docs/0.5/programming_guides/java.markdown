@@ -228,10 +228,37 @@ You have the choice to implement either [Accumulator](https://github.com/stratos
 Execution Plans
 ---------------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Depending on various parameters such as data size or number of machines in the cluster, Stratosphere's optimizer automatically chooses an execution strategy for your program. In many cases, it can be useful to know how exactly Stratosphere will execute your program.
+
+__Plan Visualization Tool__
+
+Stratosphere 0.5 comes packaged with a visualization tool for execution plans. The HTML document containing the visualizer is located under ```tools/planVisualizer.html```. It takes a JSON representation of the job execution plan and visualizes it as a graph with complete annotations of execution strategies.
+
+The following code shows how to print the execution plan JSON from your program:
+
+    final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+    
+    ...
+    
+    System.out.println(env.getExecutionPlan());
+
+
+To visualize the execution plan, do the following:
+
+1. **Open** ```planVisualizer.html``` with your web browser,
+2. **Paste** the JSON string into the text field, and
+3. **Press** the draw button.
+
+After these steps, a detailed execution plan will be visualized.
+
+![alt text](http://stratosphere.eu/img/blog/plan_visualizer2.png "A stratosphere job execution graph.")
+
+__Web Interface__
+
+Stratosphere offers a web interface for submitting and executing jobs. If you choose to use this interface to submit your packaged program, you have the option to also see the plan visualization.
+
+The script to start the webinterface is located under ```bin/start-webclient.sh```. After starting the webclient (per default on **port 8080**), your program can be uploaded and will be added to the list of available programs on the left side of the interface.
+
+You are able to specify program arguments in the textbox at the bottom of the page. Checking the plan visualization checkbox shows the execution plan before executing the actual program.
+
 </section>
