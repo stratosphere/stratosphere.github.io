@@ -5,7 +5,7 @@ toc:
 #  - {anchor: "introduction", title: "Introduction"}
   - {anchor: "example", title: "Example Program"}
   - {anchor: "linking", title: "Linking"}
-  - {anchor: "skeleton", title: "Skeleton Program"}
+  - {anchor: "skeleton", title: "Program Skeleton"}
   - {anchor: "types", title: "Data Types"}
   - {anchor: "transformations", title: "Data Transformations"}
   - {anchor: "data_sources", title: "Data Sources"}
@@ -96,9 +96,8 @@ The *stratosphere-clients* dependency is only necessary for a local execution en
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
-
 <section id="skeleton">
-Skeleton Program
+Program Skeleton
 ----------------
 
 As we already saw in the example, Stratosphere programs look like regular Java
@@ -203,12 +202,119 @@ how you created the execution environment.
 Data Types
 ----------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Stratosphere's Java API allows the use of different data types for the input and output of operators.
+
+Both `DataSet` and functions like `MapFunction`, `ReduceFunction`, etc. are parameterized with data types using Java generics in order to ensure type-safety.
+
+There are four different categories of data types:
+
+1. **Basic Java Types**
+2. **Tuples**
+3. **Custom Types**
+4. **Values**
+
+All data types are described in the following sections.
+
+#### Basic Java Types
+
+The API supports all common basic Java types:
+
+- `Short`, `Integer`, `Long`
+- `Float`, `Double`
+- `Byte`, `Boolean`
+- `Character`, `String`
+
+You can use all of them to parameterize both `DataSet` and function implementations, e.g. `DataSet<String>` for a `String` data set or `MapFunction<String, Integer>` for a mapper from `String` to `Integer`.
+
+{% highlight java %}
+DataSet<String> numbers = env.fromElements("1", "2");
+
+numbers.map(new MapFunction<String, Integer>() {
+    @Override
+    public String map(String value) throws Exception {
+        return Integer.parseInt(value);
+    }
+});
+{% endhighlight %}
+
+#### Tuples
+
+You can use the `Tuple` classes for ordered list of elements. The Java API provides classes from `Tuple1` up to `Tuple22`. Every field of a tuple can be an arbitrary Stratosphere type; including further tuples (nested tuples).
+
+```java
+DataSet<Tuple2<String, Integer>> wordCounts = env.fromElements(
+    new Tuple2<String, Integer>("hello", 1),
+    new Tuple2<String, Integer>("world", 2));
+
+wordCounts.map(new MapFunction<Tuple2<String, Integer>, Integer>() {
+    @Override
+    public String map(Tuple2<String, Integer> value) throws Exception {
+        return value.getField(1);
+    }
+});
+```
+
+Fields of a Tuple can be accessed directly by using `tuple.f4` or `tuple.getField(4)`. The field numbering starts with 0. In order to access fields 
+more intuitively and generate more readable code, it is also possible to extend a subclass of `Tuple` and add getters and setters with custom names.
+
+#### Custom Types
+
+You can use your custom Java classes as Stratosphere types.
+
+Assume that you want to use the following `WordCount` class as your custom type:
+
+```java
+public static class WordCount {
+    public String word;
+    public int count;
+    
+    public WordCount() {}
+
+    public WordCount(String word, int count) {
+        this.word = word;
+        this.count = count;
+    }
+}
+```
+
+You can now create a `DataSet<WordCount>` and run transformations, which operate on your custom type.
+
+```java
+DataSet<WordCount> wordCounts = env.fromElements(
+    new WordCount("hello", 1),
+    new WordCount("world", 2));
+
+wordCounts.map(new MapFunction<WordCount, Integer>() {
+    @Override
+    public String map(WordCount value) throws Exception {
+        return value.count;
+    }
+});
+```
+
+Grouped operators like `ReduceFunction` or `JoinFunction` currently only support the definition of `Tuple` fields as keys (see [Section Data Transformations](#transformations)). When using them with custom types, you need to implement a `KeySelector` for your custom type.
+
+```java
+wordCounts.groupBy(new KeySelector<WordCount, String>() {
+    public String getKey(WordCount v) {
+        return v.word;
+    }
+}).reduce(new MyReduceFunction());
+```
+
+#### Values
+
+Stratosphere also provides serializable wrapper types around Java basic types and Collections implementing the Java `List` or `Map` interfaces.
+
+Currently the API supports:
+
+- `ShortValue`, `IntValue`, `LongValue`
+- `FloatValue`, `DoubleValue`
+- `ByteValue`, `BooleanValue`
+- `CharValue`, `StringValue`
+- `ListValue`, `MapValue`
+
+In most cases tuples and basic java types should be preferred to values.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -976,46 +1082,35 @@ public static final class Square extends
 Broadcast Variables
 -------------------
 
-<section id="broadcast_variables">
+You can easily broadcast a data set `DataSet<T>` to all nodes executing a specific operator. The data set will then be accessible at the operator as an `Collection<T>`.
 
-Broadcast Variables allow to broadcast computation results to all nodes executing an operator. The following example shows how to set a broadcast variable and how to access it within an operator.
+- **Broadcast**: broadcast sets are registered by name via `withBroadcastSet(DataSet, String)`, and
+- **Access**: accessible via `getRuntimeContext().getBroadcastVariable(String)` at the target operator.
 
-{% highlight java %}
-// in getPlan() method
+```java
+// 1. The DataSet to be broadcasted
+DataSet<Integer> toBroadcast = env.fromElements(1, 2, 3);
 
-FileDataSource someMainInput = new FileDataSource(...);
+DataSet<String> data = env.fromElements("a", "b");
 
-FileDataSource someBcInput = new FileDataSource(...);
-
-MapOperator myMapper = MapOperator.builder(MyMapper.class)
-    .setBroadcastVariable("my_bc_var", someBcInput) // set the variable
-    .input(someMainInput)
-    .build();
-
-// [...]
-
-public class MyMapper extends MapFunction {
-
-    private Collection<Record> myBcRecords;
-
+data.map(new MapFunction<String, String>() {
     @Override
     public void open(Configuration parameters) throws Exception {
-        // receive the variables' content
-        this.myBcRecords = this.getRuntimeContext().getBroadcastVariable("my_bc_var"); 
+      // 3. Access the broadcasted DataSet as a Collection
+      Collection<Integer> broadcastSet = getRuntimeContext().getBroadcastVariable("broadcastSetName");
     }
+
 
     @Override
-    public void map(Record record, Collector<Record> out) {       
-       for (Record r : myBcRecords) {
-           // do something with the records
-       }
-
+    public String map(String value) throws Exception {
+        ...
     }
-}
-{% endhighlight %}
-*Note*: As the content of broadcast variables is kept in-memory on each node, it should not become too large. For simpler things like scalar values you should use `setParameter(...)`.
+}).withBroadcastSet(toBroadcast, "broadcastSetName"); // 2. Broadcast the DataSet
+```
 
-An example of how to use Broadcast Variables in practice can be found in the <a href="https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/record/kmeans/KMeans.java">K-Means example</a>.
+Make sure that the names (`broadcastSetName` in the previous example) match when registering and accessing broadcasted data sets. For a complete example program, have a look at [BroadcastVariableExample](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/broadcastvar/BroadcastVariableExample).
+
+**Note**: As the content of broadcast variables is kept in-memory on each node, it should not become too large. For simpler things like scalar values you should use `withParameters(...)`.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
