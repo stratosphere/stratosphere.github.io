@@ -234,13 +234,22 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 <section id="debugging">
 Debugging
 ---------
+Collection source/sink provides you an easy way to test your program locally. It will save a lot of your debugging time.
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+__How to test with collection source/sink:__
+
+To generate the ```DataSet``` from array, collection or even iterator that implements ```Serializable```, you can use the following methods in the ```ExecutionEnvironment```.
+  
+  - ```fromElements(X... data)```
+  - ```fromCollection(Collection<X> data)```
+  - ```fromCollection(Iterator<X> data, Class<X> elementType)```
+
+To store the result into a collection, you can pass a ```LocalCollectionOutputFormat``` object to ```output(OutputFormat)``` method.
+
+    List<String> resultsCollected = new ArrayList<String>();
+    result.output(new LocalCollectionOutputFormat(resultsCollected));
+
+
 </section>
 
 <section id="iterations">
