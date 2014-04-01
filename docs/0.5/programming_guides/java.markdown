@@ -55,13 +55,13 @@ Linking with Stratosphere
 
 To write programs with Stratosphere, you need to include Stratosphere’s Java API library in your project. 
 
-The simplest way to do this is to use the [quickstart scripts]({{site.baseurl}}/quickstart/java.html). They create a blank project from a Maven Archetype (think of it as a template), which sets up everything for you. To manually create the project, you can use the archetype and create a project by calling:
+The simplest way to do this is to use the [quickstart scripts]({{site.baseurl}}/quickstart/java.html). They create a blank project from a template (called Maven Archetype), which sets up everything for you. To manually create the project, you can use the archetype and create a project by calling:
 
 {% highlight bash %}
 mvn archetype:generate /
     -DarchetypeGroupId=eu.stratosphere /
     -DarchetypeArtifactId=quickstart-java /
-    -DarchetypeVersion={{site.current_stable}}
+    -DarchetypeVersion={{site.docs_05_stable}}
 {% endhighlight %}
 
 If you want to add Stratosphere to an existing Maven project, add the following entry to your *dependencies* in the *pom.xml* file of your project:
@@ -70,16 +70,16 @@ If you want to add Stratosphere to an existing Maven project, add the following 
 <dependency>
   <groupId>eu.stratosphere</groupId>
   <artifactId>stratosphere-java</artifactId>
-  <version>{{site.current_stable}}</version>
+  <version>{{site.docs_05_stable}}</version>
 </dependency>
 <dependency>
   <groupId>eu.stratosphere</groupId>
   <artifactId>stratosphere-clients</artifactId>
-  <version>{{site.current_stable}}</version>
+  <version>{{site.docs_05_stable}}</version>
 </dependency>
 {% endhighlight %}
 
-The second dependency is only necessary for a local execution context. You only need to include it, if you want to execute Stratosphere programs on your local machine (for example for testing or debugging).
+The *stratosphere-clients* dependency is only necessary for a local execution environment. You only need to include it, if you want to execute Stratosphere programs on your local machine (for example for testing or debugging).
 </section>
 
 
