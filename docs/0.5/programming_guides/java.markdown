@@ -96,7 +96,8 @@ programs with a `main()` method. Each program consists of the same basic parts:
 5. Execute your program on a cluster or on your local computer.
 
 We will now give an overview of each of those steps but please refer
-to the respective sections for more details.
+to the respective sections for more details. Note that all [core classes
+of the Java API](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-java/src/main/java/eu/stratosphere/api/java) are found in the package `eu.stratosphere.api.java`.
 
 The `ExecutionEnvironment` is the basis for all Stratosphere programs. You can
 obtain one using these static methods on class `ExecutionEnvironment`:
