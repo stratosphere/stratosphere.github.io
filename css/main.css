@@ -609,4 +609,7 @@ color: #3a87ad;
     margin-right: auto;
 }
 
-
+#docs_05_toc {
+    width: 20em;
+    margin: 2em 0 0 2em;
+}

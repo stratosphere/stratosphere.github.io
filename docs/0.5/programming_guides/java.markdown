@@ -1,8 +1,8 @@
 --- 
 layout: inner_docs_v05
 title: Java API
-sublinks:
-  - {anchor: "introduction", title: "Introduction"}
+toc:
+#  - {anchor: "introduction", title: "Introduction"}
   - {anchor: "example", title: "Example Program"}
   - {anchor: "linking", title: "Linking"}
   - {anchor: "skeleton", title: "Skeleton Program"}
@@ -35,6 +35,14 @@ Stratosphere programs can run in a variety of contexts, for example locally as s
 The Java API is strongly typed: All data sets and transformations accept typed elements. This allows to catch typing errors very early and supports safe refactoring of programs.
 </section>
 
+<div id="docs_05_toc">
+  <div class="list-group">
+{% for sublink in page.toc %}
+     <a href="#{{ sublink.anchor }}" class="list-group-item">{{forloop.index}}. <strong>{{ sublink.title }}</strong></a>
+{% endfor %}
+  </div>
+</div>
+
 <section id="example">
 Example Program
 ---------------
@@ -46,7 +54,6 @@ consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 </section>
-
 
 <section id="linking">
 Linking with Stratosphere
