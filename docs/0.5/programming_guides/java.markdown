@@ -35,13 +35,17 @@ Stratosphere programs can run in a variety of contexts, for example locally as s
 The Java API is strongly typed: All data sets and transformations accept typed elements. This allows to catch typing errors very early and supports safe refactoring of programs.
 </section>
 
+<section id="toc">
+
 <div id="docs_05_toc">
   <div class="list-group">
 {% for sublink in page.toc %}
-     <a href="#{{ sublink.anchor }}" class="list-group-item">{{forloop.index}}. <strong>{{ sublink.title }}</strong></a>
+   <a href="#{{ sublink.anchor }}" class="list-group-item">{{forloop.index}}. <strong>{{ sublink.title }}</strong></a>
 {% endfor %}
   </div>
 </div>
+
+</section>
 
 <section id="example">
 Example Program
@@ -53,6 +57,8 @@ quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
 consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
 <section id="linking">
@@ -86,6 +92,8 @@ If you want to add Stratosphere to an existing Maven project, add the following 
 {% endhighlight %}
 
 The *stratosphere-clients* dependency is only necessary for a local execution environment. You only need to include it, if you want to execute Stratosphere programs on your local machine (for example for testing or debugging).
+
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
 
@@ -188,6 +196,7 @@ Once you specified the complete program you need to call `execute` on
 the `ExecutionEnvironment`. This will either execute on your local
 machine or submit your program for execution on a cluster, depending on
 how you created the execution environment.
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
 <section id="types">
@@ -200,6 +209,8 @@ quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
 consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
 <section id="transformations">
@@ -854,6 +865,7 @@ Works analogous to key selector functions in Join transformations.
 
 ### Union (**NOT SUPPORTED YET**)
 
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
 <section id="data_sources">
@@ -866,6 +878,8 @@ quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
 consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
 <section id="data_sinks">
@@ -878,6 +892,8 @@ quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
 consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
 <section id="debugging">
@@ -890,6 +906,8 @@ quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
 consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
 <section id="iterations">
@@ -902,6 +920,8 @@ quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
 consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
 <section id="annotations">
@@ -949,6 +969,7 @@ public static final class Square extends
 }
 {% endhighlight %}
 
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
 <section id="broadcast_variables">
@@ -995,7 +1016,8 @@ public class MyMapper extends MapFunction {
 *Note*: As the content of broadcast variables is kept in-memory on each node, it should not become too large. For simpler things like scalar values you should use `setParameter(...)`.
 
 An example of how to use Broadcast Variables in practice can be found in the <a href="https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/record/kmeans/KMeans.java">K-Means example</a>.
-</section>
+
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
 <section id="packaging">
@@ -1024,6 +1046,7 @@ The overall procedure to invoke a packaged program is as follows:
   2. If the entry point class implements the `eu.stratosphere.api.common.Program`, then the system calls the `getPlan(String...)` method to obtain the program plan to execute. The `getPlan(String...)` method was the only possible way of defining a program in the *Record API* (see [0.4 docs]({{ site.baseurl }}/docs/0.4/)) and is also supported in the new Java API.
   3. If the entry point class does not implement the `eu.stratosphere.api.common.Program` interface, the system will invoke the main method of the class.
 
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
 <section id="accumulators_counters">
@@ -1068,6 +1091,8 @@ __Custom accumulators:__
 To implement your own accumulator you simply have to write your implementation of the Accumulator interface. Please look at the [WordCountAccumulator example](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/record/wordcount/WordCountAccumulators.java) for an example. Feel free to create a pull request if you think your custom accumulator should be shipped with Stratosphere.
 
 You have the choice to implement either [Accumulator](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-core/src/main/java/eu/stratosphere/api/common/accumulators/Accumulator.java) or [SimpleAccumulator](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-core/src/main/java/eu/stratosphere/api/common/accumulators/SimpleAccumulator.java). ```Accumulator<V,R>``` is most flexible: It defines a type ```V``` for the value to add, and a result type ```R``` for the final result. E.g. for a histogram, ```V``` is a number and ```R``` is a histogram. ```SimpleAccumulator``` is for the cases where both types are the same, e.g. for counters.
+
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
 <section id="execution_plan">
@@ -1107,4 +1132,5 @@ The script to start the webinterface is located under ```bin/start-webclient.sh`
 
 You are able to specify program arguments in the textbox at the bottom of the page. Checking the plan visualization checkbox shows the execution plan before executing the actual program.
 
+<div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
