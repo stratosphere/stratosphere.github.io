@@ -51,12 +51,7 @@ The Java API is strongly typed: All data sets and transformations accept typed e
 Example Program
 ---------------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+To be written.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -978,12 +973,7 @@ Works analogous to key selector functions in Join transformations.
 Data Sources
 ------------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+To be written.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -992,12 +982,7 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 Data Sinks
 ----------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+To be written.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -1006,12 +991,7 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 Debugging
 ---------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+To be written.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -1020,12 +1000,7 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 Iteration Operators
 -------------------
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+To be written.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
