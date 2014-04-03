@@ -284,12 +284,12 @@ more intuitively and generate more readable code, it is also possible to extend 
 
 #### Custom Types
 
-You can use your custom Java classes as Stratosphere types.
+You can use your custom Java classes as Stratosphere types, if they are `Serializable`.
 
 Assume that you want to use the following `WordCount` class as your custom type:
 
 ```java
-public static class WordCount {
+public static class WordCount implements Serializable {
     public String word;
     public int count;
     
