@@ -51,7 +51,37 @@ The Java API is strongly typed: All data sets and transformations accept typed e
 Example Program
 ---------------
 
-To be written.
+The following program is a complete, working example of WordCount. You can copy &amp; paste the code to run it locally. You only have to make sure that you include Stratosphere's Java API library into your project (see Section [Linking with Stratosphere](#linking)) and specify the imports. Then you are ready to go!
+
+```java
+public class WordCountExample {
+    public static void main(String[] args) throws Exception {
+        final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+
+        DataSet<String> text = env.fromElements(
+            "Who's there?",
+            "I think I hear them. Stand, ho! Who's there?");
+
+        DataSet<Tuple2<String, Integer>> wordCounts = text
+            .flatMap(new LineSplitter())
+            .groupBy(0)
+            .aggregate(Aggregations.SUM, 1);
+
+        wordCounts.print();
+
+        env.execute("Word Count Example");
+    }
+
+    public static final class LineSplitter extends FlatMapFunction<String, Tuple2<String, Integer>> {
+        @Override
+        public void flatMap(String line, Collector<Tuple2<String, Integer>> out) {
+            for (String word : line.split(" ")) {
+                out.collect(new Tuple2<String, Integer>(word, 1));
+            }
+        }
+    }
+}
+```
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
