@@ -33,6 +33,14 @@ Analysis programs in Stratosphere are regular Java Programs that implement trans
 Stratosphere programs can run in a variety of contexts, for example locally as standalone programs, locally embedded in other programs, or on clusters of many machines (see [program skeleton](#skeleton) for how to define different environments). All programs are executed lazily: When the program is run and the transformation method on the data set is invoked, it creates a specific transformation operation. That transformation operation is only executed once program execution is triggered on the environment. Whether the program is executed locally or on a cluster depends on the environment of the program.
 
 The Java API is strongly typed: All data sets and transformations accept typed elements. This allows to catch typing errors very early and supports safe refactoring of programs.
+
+<div class="panel panel-default">
+  <div class="panel-body">
+    <strong>
+    While most parts of the new Java API are already working, we are still in the process of stableizing it. If you encounter any problems, feel free to <a href="https://github.com/stratosphere/stratosphere/issues">post an issue on GitHub</a> or <a href="https://groups.google.com/forum/#!forum/stratosphere-dev">write to our mailing list</a>. You can also check out our stable <a href="{{ site.baseurl }}/docs/0.4/programming_guides/java.html">Java Record API</a>, which is the default API of all previous versions.
+    </strong>
+  </div>
+</div>
 </section>
 
 <section id="toc">
