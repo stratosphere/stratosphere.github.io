@@ -37,7 +37,7 @@ The Java API is strongly typed: All data sets and transformations accept typed e
 <div class="panel panel-default">
   <div class="panel-body">
     <strong>
-    While most parts of the new Java API are already working, we are still in the process of stableizing it. If you encounter any problems, feel free to <a href="https://github.com/stratosphere/stratosphere/issues">post an issue on GitHub</a> or <a href="https://groups.google.com/forum/#!forum/stratosphere-dev">write to our mailing list</a>. You can also check out our stable <a href="{{ site.baseurl }}/docs/0.4/programming_guides/java.html">Java Record API</a>, which is the default API of all previous versions.
+    While most parts of the new Java API are already working, we are still in the process of stabilizing it. If you encounter any problems, feel free to <a href="https://github.com/stratosphere/stratosphere/issues">post an issue on GitHub</a> or <a href="https://groups.google.com/forum/#!forum/stratosphere-dev">write to our mailing list</a>. You can also check out our stable <a href="{{ site.baseurl }}/docs/0.4/programming_guides/java.html">Java Record API</a>, which is the default API of all previous versions.
     </strong>
   </div>
 </div>
@@ -191,7 +191,7 @@ map looks like this:
 ```java
 DataSet<String> input = ...;
 
-DataSet<Integer> tokenized = text.flatMap(new MapFunction<String, Integer>() {
+DataSet<Integer> tokenized = text.map(new MapFunction<String, Integer>() {
     @Override
     public Integer map(String value) {
         return Integer.parseInt(value);
@@ -423,21 +423,20 @@ DataSet<Integer> intNumbers = // [...]
 DataSet<Integer> naturalNumbers = intNumbers.filter(new NaturalNumberFilter());
 ```
 
-### Project
+### Project (Tuple DataSets only)
 
-The Project transformation removes or moves tuple fields of a `Tuple` `DataSet`.</br>
+The Project transformation removes or moves `Tuple` fields of a `Tuple` `DataSet`.</br>
+The `project(int...)` method selects `Tuple` fields that should be retained by their index and defines their order in the output `Tuple`.
+The `types(Class<?> ...)`method must give the types of the output `Tuple` fields.</br>
+
 Projections do not require the definition of a user function.
 
 The following code shows different ways to apply a Project transformation on a `DataSet`:
 
 ```java
 DataSet<Tuple3<Integer, Double, String>> in = // [...]
-// use field indexes to remove and move fields
-DataSet<Tuple2<String, Integer>> out1 = in.project(2,0).types(String.class, Integer.class);
-// use field masks to remove fields
-DataSet<Tuple2<Integer, String>> out2 = in.project("101").types(Integer.class, String.class);
-// use field flags to remove fields
-DataSet<Tuple1<Double>> out3 = in.project(false, true, false).types(Double.class)
+// converts Tuple3<Integer, Double, String> into Tuple2<String, Integer>
+DataSet<Tuple2<String, Integer>> out = in.project(2,0).types(String.class, Integer.class);
 ```
 
 ### Reduce on grouped DataSet
@@ -561,7 +560,7 @@ DataSet<Tuple2<Integer, String>> input = // [...]
 DataSet<Tuple2<Integer, String>> output = 
                                  input
                                  // group DataSet by the first tuple field
-                                 .groupBy(1)
+                                 .groupBy(0)
                                  // apply GroupReduceFunction on each group and 
                                  //   remove elements with duplicate strings.
                                  .reduceGroup(new DistinctReduce());
@@ -609,7 +608,7 @@ public class DistinctReduce
 DataSet<Tuple2<Integer, String>> input = // [...]
 DataSet<Double> output = input
                          // group DataSet by the first tuple field
-                         .groupBy(1)
+                         .groupBy(0)
                          // sort groups on second tuple field
                          .sortGroup(1, Order.ASCENDING)
                          // // apply GroupReduceFunction on DataSet with sorted groups
@@ -749,9 +748,7 @@ DataSet<Tuple2<Integer, Double>> output = input
                                           .and(AVG, 1);
 ```
 
-**Note:** Right now, aggregation functions are type preserving. This means that for example computing the average of Integer values will yield an Integer value, i.e., the result is rounded. 
-The implemented Aggregation functions are combinable such that they should perform well even though the final result cannot be computed in parallel.
-The set of aggregation functions will be extended in the future.
+**Note:** Right now, aggregation functions are type preserving. This means that for example computing the average of Integer values will yield an Integer value, i.e., the result is rounded. In the current implementation, aggregation functions are not combinable. Therefore, aggregating a non-grouped Dataset can have severe performance implications. Improving the performance of built-in aggregation functions as well as extending the set of supported aggregation functions is on our roadmap.
 
 ### Join
 
@@ -839,11 +836,12 @@ DataSet<Tuple4<Integer, String, Double, Byte>
                   // key definition of second DataSet using a field position key
                   .equalTo(0)
                   // select and reorder fields of matching tuples
-                  .project(0,2,4,3).types(Integer.class, String.class, Double.class, Byte.class);
+                  .projectFirst(0,2).projectSecond(1).projectFirst(1)
+                  .types(Integer.class, String.class, Double.class, Byte.class);
 ```
 
-For the projection of join results, the field indexes address the fields of the first and the second tuple consecutively. In the above example, indexes 0 to 2 address the first, second, and third field of the first `DataSet` and 3 and 4 address the first and second field of the second `DataSet`, respectively. </br>
-The join projection works also for non-`Tuple` `DataSet`s. In this case, the field indexes consider the non-`Tuple` elements as a single field.
+`projectFirst(int...)` and `projectSecond(int...)` select the fields of the first and second joined input that should be assembled into an output `Tuple`. The order of indexes defines the order of fields in the output tuple. <br/>
+The join projection works also for non-`Tuple` `DataSet`s. In this case, `projectFirst()` or `projectSecond()` must be called without arguments to add a joined element ot the output `Tuple`.
 
 #### Join with DataSet Size Hint
 
@@ -920,7 +918,8 @@ DataSet<Tuple4<Integer, Byte, Integer, Double>
             result =
             input1.cross(input2)
                   // select and reorder fields of matching tuples
-                  .project(3,1,0,4).types(Integer.class, Byte.class, Integer.class, Double.class);
+                  .projectSecond(0).projectFirst(1,0).projectSecond(1)
+                  .types(Integer.class, Byte.class, Integer.class, Double.class);
 ```
 
 The field selection in a Cross projection works the same way as in the projection of Join results.
@@ -935,17 +934,17 @@ DataSet<Tuple2<Integer, String>> input2 = // [...]
 
 DataSet<Tuple4<Integer, String, Integer, String>>
             udfResult =
-            // hint that the second DataSet is very small
+                  // hint that the second DataSet is very small
             input1.crossWithTiny(input2)
-            // apply any Cross function (or projection)
+                  // apply any Cross function (or projection)
                   .with(new MyCrosser());
 
 DataSet<Tuple3<Integer, Integer, String>> 
             projectResult =
-            // hint that the second DataSet is very large
+                  // hint that the second DataSet is very large
             input1.crossWithHuge(input2)
-            // apply a projection (or any Cross function)
-                  .project(0,2,1).types(Integer.class, Integer.class, String.class)
+                  // apply a projection (or any Cross function)
+                  .projectFirst(0,1).projectSecond(1).types(Integer.class, String.class, String.class)
 ```
 
 ### CoGroup
