@@ -360,7 +360,7 @@ A data transformation transforms one or more `DataSet`s into a new `DataSet`. Ad
 
 ### Map
 
-The Map transformation applies a user-defined `MapFunction` on each element of a DataSet.</br>
+The Map transformation applies a user-defined `MapFunction` on each element of a DataSet.<br/>
 A `MapFunction` returns exactly one result element for each input element.
 
 The following code transforms a `DataSet` of Integer pairs into a `DataSet` of Integers:
@@ -381,7 +381,7 @@ DataSet<Integer> intSums = intPairs.map(new IntAdder());
 
 ### FlatMap
 
-The FlatMap transformation applies a user-defined `FlatMapFunction` on each element of a `DataSet`.</br>
+The FlatMap transformation applies a user-defined `FlatMapFunction` on each element of a `DataSet`.<br/>
 A `FlatMapFunction` can return arbitrary many result elements (including none) for each input element.
 
 The following code transforms a `DataSet` of text lines into a `DataSet` of words:
@@ -405,7 +405,7 @@ DataSet<String> words = textLines.flatMap(new Tokenizer());
 
 ### Filter
 
-The Filter transformation applies a user-defined `FilterFunction` on each element of a `DataSet` and retains only those elements for which the `FilterFunction` returns `true`.</br>
+The Filter transformation applies a user-defined `FilterFunction` on each element of a `DataSet` and retains only those elements for which the `FilterFunction` returns `true`.<br/>
 
 The following code removes all Integers smaller than zero from a `DataSet`:
 
@@ -425,9 +425,9 @@ DataSet<Integer> naturalNumbers = intNumbers.filter(new NaturalNumberFilter());
 
 ### Project (Tuple DataSets only)
 
-The Project transformation removes or moves `Tuple` fields of a `Tuple` `DataSet`.</br>
+The Project transformation removes or moves `Tuple` fields of a `Tuple` `DataSet`.<br/>
 The `project(int...)` method selects `Tuple` fields that should be retained by their index and defines their order in the output `Tuple`.
-The `types(Class<?> ...)`method must give the types of the output `Tuple` fields.</br>
+The `types(Class<?> ...)`method must give the types of the output `Tuple` fields.<br/>
 
 Projections do not require the definition of a user function.
 
@@ -484,7 +484,7 @@ DataSet<WC> wordCounts = words
 
 #### Reduce on DataSet grouped by Field Position Keys (Tuple DataSets only)
 
-Field position keys specify one or more fields of a `Tuple` `DataSet` that are used as grouping keys.</br>
+Field position keys specify one or more fields of a `Tuple` `DataSet` that are used as grouping keys.<br/>
 The following code shows how to use field position keys and apply a `ReduceFunction`.
 
 ```java
@@ -497,23 +497,6 @@ DataSet<Tuple3<String, Integer, Double>> reducedTuples =
                                          .reduce(new MyTupleReducer());
 ```
 
-#### Reduce on sorted groups (Tuple DataSets only)
-
-The elements within a group can be sorted using the GroupSort feature.</br> 
-Right now, GroupSort can only be applied on a `Tuple` `DataSet`.
-
-```java
-DataSet<Tuple3<String, Integer, Double>> tuples = // [...]
-DataSet<Tuple3<String, Integer, Double>> reducedTuples = 
-                                         tuples
-                                         // group DataSet on first tuple field
-                                         .groupBy(0)
-                                         // sort groups on second tuple field in descending order
-                                         .sortGroup(1, Order.DESCENDING)
-                                         // apply ReduceFunction on DataSet with sorted groups
-                                         .reduce(new MyTupleReducer());
-```
-
 ### GroupReduce on grouped DataSet
 
 A `DataSet` can be grouped on one or more keys. Keys can be defined using
@@ -521,7 +504,7 @@ A `DataSet` can be grouped on one or more keys. Keys can be defined using
 - a `KeySelector` function or 
 - one or more field position keys (`Tuple` `DataSet` only). 
 
-A GroupReduce transformation that is applied on a grouped `DataSet` calls a user-defined `GroupReduceFunction` for each group.</br>
+A GroupReduce transformation that is applied on a grouped `DataSet` calls a user-defined `GroupReduceFunction` for each group.<br/>
 A `GroupReduceFunction` is called with an iterator over all elements of a group and can return an arbitrary number of result elements.
 
 #### GroupReduce on DataSet grouped by Field Position Keys (Tuple DataSets only)
@@ -574,7 +557,8 @@ Works analogous to `KeySelector` functions in Reduce transformations.
 
 #### GroupReduce on sorted groups (Tuple DataSets only)
 
-GroupSort is also supported for GroupReduce transformations. For many use cases, sorted input can reduce the complexity and efficiency of a user-defined `GroupReduceFunction` significantly. 
+A `GroupReduceFunction` accesses the elements of a group using an iterator. Optionally, the iterator can hand out the elements of a group in a specified order. In many cases this can help to reduce the complexity of a user-defined `GroupReduceFunction` and improve its efficiency. <br/>
+Right now, this feature is only available for `Tuple` `DataSet`.
 
 The following code shows another example how to remove duplicate Strings in a `DataSet` grouped by an Integer and sorted by String.
 
@@ -690,7 +674,7 @@ The set of aggregation functions will be extended in the future.
 
 ### Reduce on full DataSet
 
-The Reduce transformation applies a user-defined `ReduceFunction` to all elements of a `DataSet`.</br>
+The Reduce transformation applies a user-defined `ReduceFunction` to all elements of a `DataSet`.<br/>
 The `ReduceFunction` subsequently combines pairs of elements into one element until only a single element remains.
 
 The following code shows how to sum all elements of an Integer `DataSet`:
@@ -713,7 +697,7 @@ Reducing a full `DataSet` using the Reduce transformation implies that the final
 
 ### GroupReduce on full DataSet
 
-The GroupReduce transformation applies a user-defined `GroupReduceFunction` on all elements of a `DataSet`.</br>
+The GroupReduce transformation applies a user-defined `GroupReduceFunction` on all elements of a `DataSet`.<br/>
 A `GroupReduceFunction` can iterate over all elements of `DataSet` and return an arbitrary number of result elements.
 
 The following example shows how to apply a GroupReduce transformation on a full `DataSet`:
@@ -780,7 +764,7 @@ DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Double, Integer>>>
 
 #### Join with JoinFunction
 
-A Join transformation can also call a user-defined `JoinFunction` to process joining tuples. </br>
+A Join transformation can also call a user-defined `JoinFunction` to process joining tuples. <br/>
 A `JoinFunction` receives one element of the first input `DataSet` and one element of the second input `DataSet` and returns exactly one element.
 
 The following code performs a join of `DataSet` with custom java objects and a `Tuple` `DataSet` using `KeySelector` functions and shows how to call a user-defined `JoinFunction`:
@@ -868,14 +852,14 @@ DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Integer, String>>>
 
 ### Cross
 
-The Cross transformation combines two `DataSet`s into one `DataSet`. It builds all pairwise combinations of the elements of both input `DataSet`s, i.e., it builds a Cartesian product.</br>
-The Cross transformation either calls a user-defined `CrossFunction` on each pair of elements or applies a projection. Both modes are shown in the following.</br>
+The Cross transformation combines two `DataSet`s into one `DataSet`. It builds all pairwise combinations of the elements of both input `DataSet`s, i.e., it builds a Cartesian product.<br/>
+The Cross transformation either calls a user-defined `CrossFunction` on each pair of elements or applies a projection. Both modes are shown in the following.<br/>
 
 **Note:** Cross is potentially a *very* compute-intensive operation which can challenge even large compute clusters!
 
 #### Cross with User-Defined Function
 
-A Cross transformation can call a user-defined `CrossFunction`. A `CrossFunction` receives one element of the first input and one element of the second input and returns exactly one result element. </br>
+A Cross transformation can call a user-defined `CrossFunction`. A `CrossFunction` receives one element of the first input and one element of the second input and returns exactly one result element. <br/>
 
 The following code shows how to apply a Cross transformation on two `DataSet`s using a `CrossFunction`:
 
@@ -949,7 +933,7 @@ DataSet<Tuple3<Integer, Integer, String>>
 
 ### CoGroup
 
-The CoGroup transformation jointly processes groups of two `DataSet`s. Both `DataSet`s are grouped on a defined key and groups of both `DataSet`s that share the same key are handed together to a user-defined `CoGroupFunction`. If for a specific key only one `DataSet` has a group, the `CoGroupFunction` is called with this group and an empty group.</br>
+The CoGroup transformation jointly processes groups of two `DataSet`s. Both `DataSet`s are grouped on a defined key and groups of both `DataSet`s that share the same key are handed together to a user-defined `CoGroupFunction`. If for a specific key only one `DataSet` has a group, the `CoGroupFunction` is called with this group and an empty group.<br/>
 A `CoGroupFunction` can separately iterate over the elements of both groups and return an arbitrary number of result elements.
 
 Similar to Reduce, GroupReduce, and Join, keys can be defined using
