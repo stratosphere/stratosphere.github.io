@@ -985,7 +985,18 @@ DataSet<Double> output = iVals.coGroup(dVals)
 
 Works analogous to key selector functions in Join transformations.
 
-### Union (**NOT SUPPORTED YET**)
+### Union
+
+Produces the union of two `DataSet`s, which have to be of the same type. A union of more than two `DataSet`s can be implemented with multiple union calls, as shown here:
+
+```java
+DataSet<Tuple2<String, Integer>> vals1 = // [...]
+DataSet<Tuple2<String, Integer>> vals2 = // [...]
+DataSet<Tuple2<String, Integer>> vals3 = // [...]
+DataSet<Tuple2<String, Integer>> unioned = vals1.union(vals2)
+                    .union(vals3);
+```
+
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
