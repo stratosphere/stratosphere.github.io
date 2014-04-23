@@ -18,6 +18,9 @@ questions:
   - {anchor: "errors_stop_stratosphere", title: "I can't stop Stratosphere with the provided stop-scripts. What can I do?"}
   - {anchor: "errors_out_of_memory", title: "I got an <em>OutOfMemoryException</em>. What can I do?"}
   - {anchor: "errors_huge_tm_log", title: "Why do the TaskManager log files become so huge?"}
+  - {section: "true", anchor: "yarn", title: "YARN Deployment"}
+  - {anchor: "early_return", title: "The YARN session runs only for a few seconds"}
+  - {anchor: "homedir_perm", title: "The YARN session crashes with a HDFS permission exception during startup"}
   - {section: "true", anchor: "features", title: "Features"}
   - {anchor: "features_fault_tolerance", title: "What kind of fault-tolerance does Stratosphere provide?"}
   - {anchor: "features_hadoop", title: "Are Hadoop-like utilities, such as Counters and the DistributedCache supported?"}
@@ -190,6 +193,102 @@ Check the logging behavior of your jobs. Emitting logging per or tuple may be he
 </section>
 
 
+
+<section id="yarn">
+<div class="page-header"><h2>YARN Deployment</h2></div>
+
+<section id="early_return">
+
+### The YARN session runs only for a few seconds
+
+The `./bin/yarn-session.sh` script is intended to run while the YARN-session is open. In some error cases however, the script immediately stops running. The output looks like this:
+
+```
+07:34:27,004 INFO  org.apache.hadoop.yarn.client.api.impl.YarnClientImpl         - Submitted application application_1395604279745_273123 to ResourceManager at jobtracker-host
+Stratosphere JobManager is now running on worker1:6123
+JobManager Web Interface: http://jobtracker-host:54311/proxy/application_1295604279745_273123/
+07:34:51,528 INFO  eu.stratosphere.yarn.Client                                   - Application application_1295604279745_273123 finished with state FINISHED at 1398152089553
+07:34:51,529 INFO  eu.stratosphere.yarn.Client                                   - Killing the Stratosphere-YARN application.
+07:34:51,529 INFO  org.apache.hadoop.yarn.client.api.impl.YarnClientImpl         - Killing application application_1295604279745_273123
+07:34:51,534 INFO  eu.stratosphere.yarn.Client                                   - Deleting files in hdfs://user/marcus/.stratosphere/application_1295604279745_273123
+07:34:51,559 INFO  eu.stratosphere.yarn.Client                                   - YARN Client is shutting down
+```
+
+The problem here is that the Application Master (AM) is stopping and the YARN client assumes that the application has finished.
+
+There are three possible reasons for that behavior:
+
+* The ApplicationMaster exited with an exception. To debug that error, have a look in the logfiles of the container. The `yarn-site.xml` file contains the configured path. The key for the path is `yarn.nodemanager.log-dirs`, the default value is `${yarn.log.dir}/userlogs`.
+
+* YARN has killed the container that runs the ApplicationMaster. This case happens when the AM used too much memory or other resources beyond YARN's limits. In this case, you'll find error messages in the nodemanager logs on the host.
+
+* The operating system has shut down the JVM of the AM. This can happen if the YARN configuration is wrong and more memory than physically available is configured. Execute `dmesg` on the machine where the AM was running to see if this happened. You see messages from Linux' [OOM killer](http://linux-mm.org/OOM_Killer).
+
+</section>
+<section id="homedir_perm">
+
+### The YARN session crashes with a HDFS permission exception during startup
+
+While starting the YARN session, you are receiving an exception like this:
+
+```
+Exception in thread "main" org.apache.hadoop.security.AccessControlException: Permission denied: user=robert, access=WRITE, inode="/user/robert":hdfs:supergroup:drwxr-xr-x
+  at org.apache.hadoop.hdfs.server.namenode.FSPermissionChecker.check(FSPermissionChecker.java:234)
+  at org.apache.hadoop.hdfs.server.namenode.FSPermissionChecker.check(FSPermissionChecker.java:214)
+  at org.apache.hadoop.hdfs.server.namenode.FSPermissionChecker.checkPermission(FSPermissionChecker.java:158)
+  at org.apache.hadoop.hdfs.server.namenode.FSNamesystem.checkPermission(FSNamesystem.java:5193)
+  at org.apache.hadoop.hdfs.server.namenode.FSNamesystem.checkPermission(FSNamesystem.java:5175)
+  at org.apache.hadoop.hdfs.server.namenode.FSNamesystem.checkAncestorAccess(FSNamesystem.java:5149)
+  at org.apache.hadoop.hdfs.server.namenode.FSNamesystem.startFileInternal(FSNamesystem.java:2090)
+  at org.apache.hadoop.hdfs.server.namenode.FSNamesystem.startFileInt(FSNamesystem.java:2043)
+  at org.apache.hadoop.hdfs.server.namenode.FSNamesystem.startFile(FSNamesystem.java:1996)
+  at org.apache.hadoop.hdfs.server.namenode.NameNodeRpcServer.create(NameNodeRpcServer.java:491)
+  at org.apache.hadoop.hdfs.protocolPB.ClientNamenodeProtocolServerSideTranslatorPB.create(ClientNamenodeProtocolServerSideTranslatorPB.java:301)
+  at org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos$ClientNamenodeProtocol$2.callBlockingMethod(ClientNamenodeProtocolProtos.java:59570)
+  at org.apache.hadoop.ipc.ProtobufRpcEngine$Server$ProtoBufRpcInvoker.call(ProtobufRpcEngine.java:585)
+  at org.apache.hadoop.ipc.RPC$Server.call(RPC.java:928)
+  at org.apache.hadoop.ipc.Server$Handler$1.run(Server.java:2053)
+  at org.apache.hadoop.ipc.Server$Handler$1.run(Server.java:2049)
+  at java.security.AccessController.doPrivileged(Native Method)
+  at javax.security.auth.Subject.doAs(Subject.java:396)
+  at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:1491)
+  at org.apache.hadoop.ipc.Server$Handler.run(Server.java:2047)
+
+  at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+  at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:39)
+  at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:27)
+  at java.lang.reflect.Constructor.newInstance(Constructor.java:513)
+  at org.apache.hadoop.ipc.RemoteException.instantiateException(RemoteException.java:106)
+  at org.apache.hadoop.ipc.RemoteException.unwrapRemoteException(RemoteException.java:73)
+  at org.apache.hadoop.hdfs.DFSOutputStream.newStreamForCreate(DFSOutputStream.java:1393)
+  at org.apache.hadoop.hdfs.DFSClient.create(DFSClient.java:1382)
+  at org.apache.hadoop.hdfs.DFSClient.create(DFSClient.java:1307)
+  at org.apache.hadoop.hdfs.DistributedFileSystem$6.doCall(DistributedFileSystem.java:384)
+  at org.apache.hadoop.hdfs.DistributedFileSystem$6.doCall(DistributedFileSystem.java:380)
+  at org.apache.hadoop.fs.FileSystemLinkResolver.resolve(FileSystemLinkResolver.java:81)
+  at org.apache.hadoop.hdfs.DistributedFileSystem.create(DistributedFileSystem.java:380)
+  at org.apache.hadoop.hdfs.DistributedFileSystem.create(DistributedFileSystem.java:324)
+  at org.apache.hadoop.fs.FileSystem.create(FileSystem.java:905)
+  at org.apache.hadoop.fs.FileSystem.create(FileSystem.java:886)
+  at org.apache.hadoop.fs.FileSystem.create(FileSystem.java:783)
+  at org.apache.hadoop.fs.FileUtil.copy(FileUtil.java:365)
+  at org.apache.hadoop.fs.FileUtil.copy(FileUtil.java:338)
+  at org.apache.hadoop.fs.FileSystem.copyFromLocalFile(FileSystem.java:2021)
+  at org.apache.hadoop.fs.FileSystem.copyFromLocalFile(FileSystem.java:1989)
+  at org.apache.hadoop.fs.FileSystem.copyFromLocalFile(FileSystem.java:1954)
+  at eu.stratosphere.yarn.Utils.setupLocalResource(Utils.java:176)
+  at eu.stratosphere.yarn.Client.run(Client.java:362)
+  at eu.stratosphere.yarn.Client.main(Client.java:568)
+```
+
+The reason for this error is, that the home directory of the user **in HDFS** has the wrong permissions. The user (in this case `robert`) can not create directories in his own home directory.
+
+Stratosphere creates a `.stratosphere/` directory in the users home directory where it stores the Stratosphere jar and configuration file.
+
+</section>
+
+</section>
+
 <section id="features">
 <div class="page-header"><h2>Features</h2></div>
 
@@ -204,7 +303,7 @@ Fault tolerance will go into the open source project in the next versions.
 
 [Stratosphere's Accumulators]({{site.baseurl}}/docs/0.4/programming_guides/java.html#accumulators) work very similar like Hadoop's counters, but are more powerful.
 
-A distributed cache is not available right now. In many cases, operators like [cross]({{site.baseurl/docs/0.4/programming_guides/pmodel.html#operators}}) and the upcoming broadcast variables handle these situations more efficiently.
+Support for a distributed cache will be added in release 0.5. In many cases, operators like [cross]({{site.baseurl/docs/0.4/programming_guides/pmodel.html#operators}}) and broadcast variables handle these situations more efficiently.
 </section>
 
 </section>

@@ -29,6 +29,7 @@ Apache [Hadoop YARN](http://hadoop.apache.org/) is a cluster resource management
 - Apache Hadoop 2.2
 - HDFS
 
+If you have troubles using the Stratosphere YARN client, have a look in the [FAQ section]({{site.baseurl}}/docs/0.5/general/faq.html).
 
 <section id="session">
 ### Start Stratosphere Session
