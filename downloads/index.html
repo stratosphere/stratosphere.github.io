@@ -207,7 +207,8 @@ $ curl https://raw.githubusercontent.com/stratosphere/stratosphere-quickstart/ma
 $ mvn archetype:generate                             \
     -DarchetypeGroupId=eu.stratosphere               \
     -DarchetypeArtifactId=quickstart-java-SNAPSHOT   \
-    -DarchetypeVersion={{site.current_snapshot}}
+    -DarchetypeVersion={{site.current_snapshot}}     \
+    -DarchetypeCatalog=https://oss.sonatype.org/content/repositories/snapshots/
 {% endhighlight %}
               This allows you to <strong>name your newly created project</strong>. It will interactively ask you for the groupId, artifactId, and package name.
               </div>
