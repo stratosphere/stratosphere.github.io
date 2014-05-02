@@ -10,7 +10,7 @@ links:
 #  -       { anchor: vagrant, title: "Vagrant" }
   -       { anchor: debian, title: "Debian Package" }
   -       { anchor: source, title: "Source" }
-  -       { anchor: nightly, title: "Nightly Builds" }
+  -       { anchor: nightly, title: "Nightly Builds (SNAPSHOT)" }
 ---
 
 <p class="lead">There are plenty of ways to get Stratosphere. Pick any of the following to start.</p>
@@ -191,6 +191,28 @@ mvn clean package -DskipTests -Dhadoop.profile=2
 
         Find all <a onclick="_gaq.push(['_trackEvent','Action','download-dlpage-s3binlink',this.href]);" href="http://stratosphere-bin.s3-website-us-east-1.amazonaws.com/">binaries on Amazon S3</a>.
         </p>
+        <h3>SNAPSHOT-Versions Quickstart scripts</h3>
+          <ul class="nav nav-tabs" style="border-bottom: none;">
+              <li class="active"><a href="#quickstart-script" data-toggle="tab">Run the <strong>quickstart script</strong></a></li>
+              <li><a href="#maven-archetype" data-toggle="tab">Use <strong>Maven archetypes</strong></a></li>
+          </ul>
+          <div class="tab-content">
+              <div class="tab-pane active" id="quickstart-script">
+{% highlight bash %}
+$ curl https://raw.githubusercontent.com/stratosphere/stratosphere-quickstart/master/quickstart-SNAPSHOT.sh | bash
+{% endhighlight %}
+              </div>
+              <div class="tab-pane" id="maven-archetype">
+{% highlight bash %}
+$ mvn archetype:generate                             \
+    -DarchetypeGroupId=eu.stratosphere               \
+    -DarchetypeArtifactId=quickstart-java-SNAPSHOT   \
+    -DarchetypeVersion={{site.current_snapshot}}
+{% endhighlight %}
+              This allows you to <strong>name your newly created project</strong>. It will interactively ask you for the groupId, artifactId, and package name.
+              </div>
+          </div>
+
         <h3>SNAPSHOT-Versions in Sonatype Maven</h3>
         Add the Sonatype Snapshots repository to into your Maven pom:
         {% highlight xml %}
