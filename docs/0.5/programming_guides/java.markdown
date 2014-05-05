@@ -323,7 +323,10 @@ wordCounts.map(new MapFunction<WordCount, Integer>() {
 });
 ```
 
-When working with grouped operators such as `ReduceFunction` or `JoinFunction` and custom custom types, you need to implement a `KeySelector` for your custom type. This is different from tuples where you can simply specify grouping fields by indices. (see [Section Data Transformations](#transformations))
+When working with operators that require a Key for grouping or matching records
+you need to implement a `KeySelector` for your custom type. This is different
+from tuples where you can simply specify grouping fields by indices. (see
+[Section Data Transformations](#transformations))
 
 ```java
 wordCounts.groupBy(new KeySelector<WordCount, String>() {
@@ -438,7 +441,7 @@ DataSet<Tuple3<Integer, Double, String>> in = // [...]
 DataSet<Tuple2<String, Integer>> out = in.project(2,0).types(String.class, Integer.class);
 ```
 
-### Grouped DataSet
+### Transformations on grouped DataSet
 
 The reduce operations can operate on grouped data sets. Specifying the key to
 be used for grouping can be done in two ways:
