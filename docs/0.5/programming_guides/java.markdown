@@ -1,4 +1,4 @@
---- 
+---
 layout: inner_docs_v05
 title: Java API
 toc:
@@ -28,11 +28,13 @@ Java API
 Introduction
 ------------
 
-Analysis programs in Stratosphere are regular Java Programs that implement transformations on data sets (e.g., filtering, , mapping, joining, grouping). The data sets are initially created from certain sources (e.g., by reading files, or from collections). The results are returned by sinks, which may for example write the data to (distributed) files, or print it to the command line. The sections on the [program skeleton](#skeleton) and [transformations](#transformations) show the general template of a program and describe the available transformations.
+Analysis programs in Stratosphere are regular Java Programs that implement transformations on data sets (e.g., filtering, , mapping, joining, grouping). The data sets are initially created from certain sources (e.g., by reading files, or from collections). Results are written to sinks, which may for example write the data to (distributed) files, or to standard output (for example your terminal).
 
-Stratosphere programs can run in a variety of contexts, for example locally as standalone programs, locally embedded in other programs, or on clusters of many machines (see [program skeleton](#skeleton) for how to define different environments). All programs are executed lazily: When the program is run and the transformation method on the data set is invoked, it creates a specific transformation operation. That transformation operation is only executed once program execution is triggered on the environment. Whether the program is executed locally or on a cluster depends on the environment of the program.
+Stratosphere programs can run in a variety of contexts, for example locally as standalone programs, locally embedded in other programs, or on clusters of many machines (see [program skeleton](#skeleton) for how to define different environments). All programs are executed lazily: When the program is run and transformation methods are invoked on a data set, it creates a transformation operation. That transformation operation is only executed once program execution is triggered on the environment. Whether the program is executed locally or on a cluster depends on the environment of the program.
 
 The Java API is strongly typed: All data sets and transformations accept typed elements. This allows to catch typing errors very early and supports safe refactoring of programs.
+
+The sections on the [program skeleton](#skeleton) and [transformations](#transformations) show the general template of a program and describe the available transformations.
 
 <div class="panel panel-default">
   <div class="panel-body">
@@ -59,7 +61,7 @@ The Java API is strongly typed: All data sets and transformations accept typed e
 Example Program
 ---------------
 
-The following program is a complete, working example of WordCount. You can copy &amp; paste the code to run it locally. You only have to make sure that you include Stratosphere's Java API library into your project (see Section [Linking with Stratosphere](#linking)) and specify the imports. Then you are ready to go!
+The following program is a complete, working example of WordCount. You can copy &amp; paste the code to run it locally. You only have to include Stratosphere's Java API library into your project (see Section [Linking with Stratosphere](#linking)) and specify the imports. Then you are ready to go!
 
 ```java
 public class WordCountExample {
@@ -98,7 +100,7 @@ public class WordCountExample {
 Linking with Stratosphere
 -------------------------
 
-To write programs with Stratosphere, you need to include Stratosphere’s Java API library in your project. 
+To write programs with Stratosphere, you need to include Stratosphere’s Java API library in your project.
 
 The simplest way to do this is to use the [quickstart scripts]({{site.baseurl}}/quickstart/java.html). They create a blank project from a template (called Maven Archetype), which sets up everything for you. To manually create the project, you can use the archetype and create a project by calling:
 
@@ -139,7 +141,7 @@ programs with a `main()` method. Each program consists of the same basic parts:
 1. Obtain an `ExecutionEnvironment`,
 2. Load your data,
 3. Specify transformations on this data,
-4. Store the results of your computations, and
+4. Specify where to store the results of your computations, and
 5. Execute your program on a cluster or on your local computer.
 
 We will now give an overview of each of those steps but please refer
@@ -154,7 +156,7 @@ getExecutionEnvironment()
 
 createLocalEnvironment()
 createLocalEnvironment(int degreeOfParallelism)
-    
+
 createRemoteEnvironment(String host, int port, String... jarFiles)
 createRemoteEnvironment(String host, int port, int degreeOfParallelism, String... jarFiles)
 ```
@@ -236,7 +238,6 @@ Data Types
 ----------
 
 Stratosphere's Java API allows the use of different data types for the input and output of operators.
-
 Both `DataSet` and functions like `MapFunction`, `ReduceFunction`, etc. are parameterized with data types using Java generics in order to ensure type-safety.
 
 There are four different categories of data types:
@@ -245,8 +246,6 @@ There are four different categories of data types:
 2. **Tuples**
 3. **Custom Types**
 4. **Values**
-
-All data types are described in the following sections.
 
 #### Basic Java Types
 
@@ -287,20 +286,19 @@ wordCounts.map(new MapFunction<Tuple2<String, Integer>, Integer>() {
 });
 ```
 
-Fields of a Tuple can be accessed directly by using `tuple.f4` or `tuple.getField(4)`. The field numbering starts with 0. In order to access fields 
+Fields of a Tuple can be accessed directly by using `tuple.f4` or `tuple.getField(4)`. The field numbering starts with 0. In order to access fields
 more intuitively and generate more readable code, it is also possible to extend a subclass of `Tuple` and add getters and setters with custom names.
 
 #### Custom Types
 
 You can use your custom Java classes as Stratosphere types, if they are `Serializable`.
-
-Assume that you want to use the following `WordCount` class as your custom type:
+Consider this simple class:
 
 ```java
 public static class WordCount implements Serializable {
     public String word;
     public int count;
-    
+
     public WordCount() {}
 
     public WordCount(String word, int count) {
@@ -325,7 +323,10 @@ wordCounts.map(new MapFunction<WordCount, Integer>() {
 });
 ```
 
-Grouped operators like `ReduceFunction` or `JoinFunction` currently only support the definition of `Tuple` fields as keys (see [Section Data Transformations](#transformations)). When using them with custom types, you need to implement a `KeySelector` for your custom type.
+When working with operators that require a Key for grouping or matching records
+you need to implement a `KeySelector` for your custom type. This is different
+from tuples where you can simply specify grouping fields by indices. (see
+[Section Data Transformations](#transformations))
 
 ```java
 wordCounts.groupBy(new KeySelector<WordCount, String>() {
@@ -337,9 +338,10 @@ wordCounts.groupBy(new KeySelector<WordCount, String>() {
 
 #### Values
 
-Stratosphere also provides serializable wrapper types around Java basic types and Collections implementing the Java `List` or `Map` interfaces.
+Stratosphere also provides the `Value` interface with two methods: `read` and `write`. Using this you can implement a
+data type with custom serialization and deserialization code.
 
-Currently the API supports:
+Stratosphere also provides serializable wrapper types around Java basic types and Collections implementing the Java `List` or `Map` interfaces:
 
 - `ShortValue`, `IntValue`, `LongValue`
 - `FloatValue`, `DoubleValue`
@@ -347,7 +349,6 @@ Currently the API supports:
 - `CharValue`, `StringValue`
 - `ListValue`, `MapValue`
 
-In most cases tuples and basic java types should be preferred to values.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -360,8 +361,9 @@ A data transformation transforms one or more `DataSet`s into a new `DataSet`. Ad
 
 ### Map
 
-The Map transformation applies a user-defined `MapFunction` on each element of a DataSet.<br/>
-A `MapFunction` returns exactly one result element for each input element.
+The Map transformation applies a user-defined `MapFunction` on each element of a DataSet.
+It implements a one-to-one mapping, that is, exactly one element must be returned by
+the function.
 
 The following code transforms a `DataSet` of Integer pairs into a `DataSet` of Integers:
 
@@ -381,8 +383,8 @@ DataSet<Integer> intSums = intPairs.map(new IntAdder());
 
 ### FlatMap
 
-The FlatMap transformation applies a user-defined `FlatMapFunction` on each element of a `DataSet`.<br/>
-A `FlatMapFunction` can return arbitrary many result elements (including none) for each input element.
+The FlatMap transformation applies a user-defined `FlatMapFunction` on each element of a `DataSet`.
+This variant of a map function can return arbitrary many result elements (including none) for each input element.
 
 The following code transforms a `DataSet` of text lines into a `DataSet` of words:
 
@@ -405,7 +407,7 @@ DataSet<String> words = textLines.flatMap(new Tokenizer());
 
 ### Filter
 
-The Filter transformation applies a user-defined `FilterFunction` on each element of a `DataSet` and retains only those elements for which the `FilterFunction` returns `true`.<br/>
+The Filter transformation applies a user-defined `FilterFunction` on each element of a `DataSet` and retains only those elements for which the function returns `true`.
 
 The following code removes all Integers smaller than zero from a `DataSet`:
 
@@ -425,9 +427,9 @@ DataSet<Integer> naturalNumbers = intNumbers.filter(new NaturalNumberFilter());
 
 ### Project (Tuple DataSets only)
 
-The Project transformation removes or moves `Tuple` fields of a `Tuple` `DataSet`.<br/>
+The Project transformation removes or moves `Tuple` fields of a `Tuple` `DataSet`.
 The `project(int...)` method selects `Tuple` fields that should be retained by their index and defines their order in the output `Tuple`.
-The `types(Class<?> ...)`method must give the types of the output `Tuple` fields.<br/>
+The `types(Class<?> ...)`method must give the types of the output `Tuple` fields.
 
 Projections do not require the definition of a user function.
 
@@ -439,12 +441,17 @@ DataSet<Tuple3<Integer, Double, String>> in = // [...]
 DataSet<Tuple2<String, Integer>> out = in.project(2,0).types(String.class, Integer.class);
 ```
 
+### Transformations on grouped DataSet
+
+The reduce operations can operate on grouped data sets. Specifying the key to
+be used for grouping can be done in two ways:
+
+- a `KeySelector` function or
+- one or more field position keys (`Tuple` `DataSet` only).
+
+Please look at the reduce examples to see how the grouping keys are specified.
+
 ### Reduce on grouped DataSet
-
-A `DataSet` can be grouped on one or more keys. Keys can be defined using
-
-- a `KeySelector` function or 
-- one or more field position keys (`Tuple` `DataSet` only). 
 
 A Reduce transformation that is applied on a grouped `DataSet` reduces each group to a single element using a user-defined `ReduceFunction`.
 For each group of input elements, a `ReduceFunction` successively combines pairs of elements into one element until only a single element for each group remains.
@@ -473,10 +480,10 @@ public class WordCounter extends ReduceFunction<WC> {
 // [...]
 DataSet<WC> words = // [...]
 DataSet<WC> wordCounts = words
-                         // DataSet grouping with inline-defined KeySelector function 
+                         // DataSet grouping with inline-defined KeySelector function
                          .groupBy(
-                           new KeySelector<WC, String>() { 
-                             public String getKey(WC wc) { return wc.word; } 
+                           new KeySelector<WC, String>() {
+                             public String getKey(WC wc) { return wc.word; }
                            })
                          // apply ReduceFunction on grouped DataSet
                          .reduce(new WordCounter());
@@ -484,12 +491,12 @@ DataSet<WC> wordCounts = words
 
 #### Reduce on DataSet grouped by Field Position Keys (Tuple DataSets only)
 
-Field position keys specify one or more fields of a `Tuple` `DataSet` that are used as grouping keys.<br/>
+Field position keys specify one or more fields of a `Tuple` `DataSet` that are used as grouping keys.
 The following code shows how to use field position keys and apply a `ReduceFunction`.
 
 ```java
 DataSet<Tuple3<String, Integer, Double>> tuples = // [...]
-DataSet<Tuple3<String, Integer, Double>> reducedTuples = 
+DataSet<Tuple3<String, Integer, Double>> reducedTuples =
                                          tuples
                                          // group DataSet on first and second field of Tuple
                                          .groupBy(0,1)
@@ -499,20 +506,16 @@ DataSet<Tuple3<String, Integer, Double>> reducedTuples =
 
 ### GroupReduce on grouped DataSet
 
-A `DataSet` can be grouped on one or more keys. Keys can be defined using
-
-- a `KeySelector` function or 
-- one or more field position keys (`Tuple` `DataSet` only). 
-
-A GroupReduce transformation that is applied on a grouped `DataSet` calls a user-defined `GroupReduceFunction` for each group.<br/>
-A `GroupReduceFunction` is called with an iterator over all elements of a group and can return an arbitrary number of result elements.
+A GroupReduce transformation that is applied on a grouped `DataSet` calls a user-defined `GroupReduceFunction` for each group. The difference
+between this and `Reduce` is that the user defined function gets the whole group at once.
+The function is invoked with an iterator over all elements of a group and can return an arbitrary number of result elements using the collector.
 
 #### GroupReduce on DataSet grouped by Field Position Keys (Tuple DataSets only)
 
 The following code shows how duplicate strings can be removed from a `DataSet` grouped by Integer.
 
 ```java
-public class DistinctReduce 
+public class DistinctReduce
          extends GroupReduceFunction<Tuple2<Integer, String>, Tuple2<Integer, String> {
   // Set to hold all unique strings of a group
   Set<String> uniqStrings = new HashSet<String>();
@@ -540,16 +543,16 @@ public class DistinctReduce
 
 // [...]
 DataSet<Tuple2<Integer, String>> input = // [...]
-DataSet<Tuple2<Integer, String>> output = 
+DataSet<Tuple2<Integer, String>> output =
                                  input
                                  // group DataSet by the first tuple field
                                  .groupBy(0)
-                                 // apply GroupReduceFunction on each group and 
+                                 // apply GroupReduceFunction on each group and
                                  //   remove elements with duplicate strings.
                                  .reduceGroup(new DistinctReduce());
 ```
 
-**Note:** Stratosphere works internally a lot with mutable objects. Collecting objects like in the above example only works because Strings are immutable in Java!
+**Note:** Stratosphere internally works a lot with mutable objects. Collecting objects like in the above example only works because Strings are immutable in Java!
 
 #### GroupReduce on DataSet grouped by KeySelector Function
 
@@ -557,14 +560,14 @@ Works analogous to `KeySelector` functions in Reduce transformations.
 
 #### GroupReduce on sorted groups (Tuple DataSets only)
 
-A `GroupReduceFunction` accesses the elements of a group using an iterator. Optionally, the iterator can hand out the elements of a group in a specified order. In many cases this can help to reduce the complexity of a user-defined `GroupReduceFunction` and improve its efficiency. <br/>
+A `GroupReduceFunction` accesses the elements of a group using an iterator. Optionally, the iterator can hand out the elements of a group in a specified order. In many cases this can help to reduce the complexity of a user-defined `GroupReduceFunction` and improve its efficiency.
 Right now, this feature is only available for `Tuple` `DataSet`.
 
 The following code shows another example how to remove duplicate Strings in a `DataSet` grouped by an Integer and sorted by String.
 
 ```java
 // GroupReduceFunction that removes consecutive identical elements
-public class DistinctReduce 
+public class DistinctReduce
          extends GroupReduceFunction<Tuple2<Integer, String>, Tuple2<Integer, String>> {
   @Override
   public void reduce(Iterator<Tuple2<Integer, String>> in, Collector<Tuple2<Integer, String>> out) {
@@ -599,7 +602,7 @@ DataSet<Double> output = input
                          .reduceGroup(new DistinctReduce());
 ```
 
-**Note:** A GroupSort comes often almost for free if the grouping is established using a sort-based execution strategy.
+**Note:** A GroupSort often comes for free if the grouping is established using a sort-based execution strategy of an operator before the reduce operation.
 
 #### Combinable GroupReduceFunctions
 
@@ -610,11 +613,11 @@ The following code shows how to compute multiple sums using a combinable `GroupR
 ```java
 // Combinable GroupReduceFunction that computes two sums.
 @Combinable
-public class MyCombinableGroupReducer 
-         extends GroupReduceFunction<Tuple3<String, Integer, Double>, 
+public class MyCombinableGroupReducer
+         extends GroupReduceFunction<Tuple3<String, Integer, Double>,
                                      Tuple3<String, Integer, Double>> {
   @Override
-  public void reduce(Iterator<Tuple3<String, Integer, Double>> in, 
+  public void reduce(Iterator<Tuple3<String, Integer, Double>> in,
                      Collector<Tuple3<String, Integer, Double>> out) {
     // one element is always present in iterator
     Tuple3<String, Integer, Double> curr = in.next();
@@ -632,7 +635,7 @@ public class MyCombinableGroupReducer
   }
 
   @Override
-  public void combine(Iterator<Tuple3<String, Integer, Double>> in, 
+  public void combine(Iterator<Tuple3<String, Integer, Double>> in,
                       Collector<Tuple3<String, Integer, Double>> out)) {
     // in some cases combine() calls can simply be forwarded to reduce().
     this.reduce(in, out);
@@ -651,11 +654,6 @@ There are some common aggregation operations that are frequently used. The Aggre
 
 The Aggregate transformation can only be applied on a `Tuple` `DataSet`.
 
-A `DataSet` can be grouped on one or more keys. Keys can be defined using
-
-- a `KeySelector` function or 
-- one or more field position keys (`Tuple` `DataSet` only). 
-
 The following code shows how to apply an Aggregation transformation on a `DataSet` grouped by field position keys:
 
 ```java
@@ -669,12 +667,12 @@ DataSet<Tuple3<Integer, String, Double>> output = input
                                           .and(AVG, 2);
 ```
 
-**Note:** Right now, aggregation functions are type preserving. This means that for example computing the average of Integer values will yield an Integer value, i.e., the result is rounded. 
+**Note:** Right now, aggregation functions are type preserving. This means that for example computing the average of Integer values will yield an Integer value, i.e., the result is rounded.
 The set of aggregation functions will be extended in the future.
 
 ### Reduce on full DataSet
 
-The Reduce transformation applies a user-defined `ReduceFunction` to all elements of a `DataSet`.<br/>
+The Reduce transformation applies a user-defined `ReduceFunction` to all elements of a `DataSet`.
 The `ReduceFunction` subsequently combines pairs of elements into one element until only a single element remains.
 
 The following code shows how to sum all elements of an Integer `DataSet`:
@@ -697,7 +695,7 @@ Reducing a full `DataSet` using the Reduce transformation implies that the final
 
 ### GroupReduce on full DataSet
 
-The GroupReduce transformation applies a user-defined `GroupReduceFunction` on all elements of a `DataSet`.<br/>
+The GroupReduce transformation applies a user-defined `GroupReduceFunction` on all elements of a `DataSet`.
 A `GroupReduceFunction` can iterate over all elements of `DataSet` and return an arbitrary number of result elements.
 
 The following example shows how to apply a GroupReduce transformation on a full `DataSet`:
@@ -736,10 +734,10 @@ DataSet<Tuple2<Integer, Double>> output = input
 
 ### Join
 
-The Join transformation joins two `DataSet`s into one `DataSet`. The elements of both `DataSet`s are joined on one or more keys which can be specified using 
+The Join transformation joins two `DataSet`s into one `DataSet`. The elements of both `DataSet`s are joined on one or more keys which can be specified using
 
-- a `KeySelector` function or 
-- one or more field position keys (`Tuple` `DataSet` only). 
+- a `KeySelector` function or
+- one or more field position keys (`Tuple` `DataSet` only).
 
 There are a few different ways to perform a Join transformation which are shown in the following.
 
@@ -753,7 +751,7 @@ The following code shows a default Join transformation using field position keys
 DataSet<Tuple2<Integer, String>> input1 = // [...]
 DataSet<Tuple2<Double, Integer>> input2 = // [...]
 // result dataset is typed as Tuple2
-DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Double, Integer>>> 
+DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Double, Integer>>>
             result =
             input1.join(input2)
                   // key definition on first DataSet using a field position key
@@ -764,7 +762,7 @@ DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Double, Integer>>>
 
 #### Join with JoinFunction
 
-A Join transformation can also call a user-defined `JoinFunction` to process joining tuples. <br/>
+A Join transformation can also call a user-defined `JoinFunction` to process joining tuples.
 A `JoinFunction` receives one element of the first input `DataSet` and one element of the second input `DataSet` and returns exactly one element.
 
 The following code performs a join of `DataSet` with custom java objects and a `Tuple` `DataSet` using `KeySelector` functions and shows how to call a user-defined `JoinFunction`:
@@ -778,9 +776,9 @@ public class Rating {
 }
 
 // Join function that joins a custom POJO with a Tuple
-public class PointWeighter 
+public class PointWeighter
          extends JoinFunction<Rating, Tuple2<String, Double>, Tuple2<String, Double>> {
-  
+
   @Override
   public Tuple2<String, Double> join(Rating rating, Tuple2<String, Double> weight) {
     // multiply the points and rating and construct a new output tuple
@@ -790,12 +788,12 @@ public class PointWeighter
 
 DataSet<Rating> ratings = // [...]
 DataSet<Tuple2<String, Double>> weights = // [...]
-DataSet<Tuple2<String, Double>> 
+DataSet<Tuple2<String, Double>>
             weightedRatings =
             ratings.join(weights)
                    // key definition of first DataSet using a KeySelector function
-                   .where(new KeySelection<Rating, String>() { 
-                            public String getKey(Rating r) { return r.category; } 
+                   .where(new KeySelection<Rating, String>() {
+                            public String getKey(Rating r) { return r.category; }
                           })
                    // key definition of second DataSet using a KeySelector function
                    .equalTo(new KeySelection<Tuple2<String, Double>, String>() {
@@ -824,7 +822,7 @@ DataSet<Tuple4<Integer, String, Double, Byte>
                   .types(Integer.class, String.class, Double.class, Byte.class);
 ```
 
-`projectFirst(int...)` and `projectSecond(int...)` select the fields of the first and second joined input that should be assembled into an output `Tuple`. The order of indexes defines the order of fields in the output tuple. <br/>
+`projectFirst(int...)` and `projectSecond(int...)` select the fields of the first and second joined input that should be assembled into an output `Tuple`. The order of indexes defines the order of fields in the output tuple.
 The join projection works also for non-`Tuple` `DataSet`s. In this case, `projectFirst()` or `projectSecond()` must be called without arguments to add a joined element ot the output `Tuple`.
 
 #### Join with DataSet Size Hint
@@ -835,14 +833,14 @@ In order to guide the optimizer to pick the right execution strategy, you can hi
 DataSet<Tuple2<Integer, String>> input1 = // [...]
 DataSet<Tuple2<Integer, String>> input2 = // [...]
 
-DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Integer, String>>> 
+DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Integer, String>>>
             result1 =
             // hint that the second DataSet is very small
             input1.joinWithTiny(input2)
                   .where(0)
                   .equalTo(0);
 
-DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Integer, String>>> 
+DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Integer, String>>>
             result2 =
             // hint that the second DataSet is very large
             input1.joinWithHuge(input2)
@@ -852,14 +850,14 @@ DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Integer, String>>>
 
 ### Cross
 
-The Cross transformation combines two `DataSet`s into one `DataSet`. It builds all pairwise combinations of the elements of both input `DataSet`s, i.e., it builds a Cartesian product.<br/>
-The Cross transformation either calls a user-defined `CrossFunction` on each pair of elements or applies a projection. Both modes are shown in the following.<br/>
+The Cross transformation combines two `DataSet`s into one `DataSet`. It builds all pairwise combinations of the elements of both input `DataSet`s, i.e., it builds a Cartesian product.
+The Cross transformation either calls a user-defined `CrossFunction` on each pair of elements or applies a projection. Both modes are shown in the following.
 
 **Note:** Cross is potentially a *very* compute-intensive operation which can challenge even large compute clusters!
 
 #### Cross with User-Defined Function
 
-A Cross transformation can call a user-defined `CrossFunction`. A `CrossFunction` receives one element of the first input and one element of the second input and returns exactly one result element. <br/>
+A Cross transformation can call a user-defined `CrossFunction`. A `CrossFunction` receives one element of the first input and one element of the second input and returns exactly one result element.
 
 The following code shows how to apply a Cross transformation on two `DataSet`s using a `CrossFunction`:
 
@@ -871,9 +869,9 @@ public class Coord {
 }
 
 // CrossFunction computes the Euclidean distance between two Coord objects.
-public class EuclideanDistComputer 
+public class EuclideanDistComputer
          extends CrossFunction<Coord, Coord, Tuple3<Integer, Integer, Double>> {
-  
+
   @Override
   public Tuple3<Integer, Integer, Double> cross(Coord c1, Coord c2) {
     // compute Euclidean distance of coordinates
@@ -884,7 +882,7 @@ public class EuclideanDistComputer
 
 DataSet<Coord> coords1 = // [...]
 DataSet<Coord> coords2 = // [...]
-DataSet<Tuple3<Integer, Integer, Double>> 
+DataSet<Tuple3<Integer, Integer, Double>>
             distances =
             coords1.cross(coords2)
                    // apply CrossFunction
@@ -923,7 +921,7 @@ DataSet<Tuple4<Integer, String, Integer, String>>
                   // apply any Cross function (or projection)
                   .with(new MyCrosser());
 
-DataSet<Tuple3<Integer, Integer, String>> 
+DataSet<Tuple3<Integer, Integer, String>>
             projectResult =
                   // hint that the second DataSet is very large
             input1.crossWithHuge(input2)
@@ -933,12 +931,12 @@ DataSet<Tuple3<Integer, Integer, String>>
 
 ### CoGroup
 
-The CoGroup transformation jointly processes groups of two `DataSet`s. Both `DataSet`s are grouped on a defined key and groups of both `DataSet`s that share the same key are handed together to a user-defined `CoGroupFunction`. If for a specific key only one `DataSet` has a group, the `CoGroupFunction` is called with this group and an empty group.<br/>
+The CoGroup transformation jointly processes groups of two `DataSet`s. Both `DataSet`s are grouped on a defined key and groups of both `DataSet`s that share the same key are handed together to a user-defined `CoGroupFunction`. If for a specific key only one `DataSet` has a group, the `CoGroupFunction` is called with this group and an empty group.
 A `CoGroupFunction` can separately iterate over the elements of both groups and return an arbitrary number of result elements.
 
 Similar to Reduce, GroupReduce, and Join, keys can be defined using
 
-- a `KeySelector` function or 
+- a `KeySelector` function or
 - one or more field position keys (`Tuple` `DataSet` only).
 
 #### CoGroup on DataSets grouped by Field Position Keys (Tuple DataSets only)
@@ -951,8 +949,8 @@ public class MyCoGrouper
   Set<Integer> ints = new HashSet<Integer>();
 
   @Override
-  public void coGroup(Iterator<Tuple2<String, Integer>> iVals, 
-                      Iterator<Tuple2<String, Double>> dVals, 
+  public void coGroup(Iterator<Tuple2<String, Integer>> iVals,
+                      Iterator<Tuple2<String, Double>> dVals,
                       Collector<Double> out) {
     // clear Integer set
     ints.clear();
@@ -1081,7 +1079,7 @@ Delta iterations exploit the fact that certain algorithms do not change every da
 
 In addition to the partial solution that is fed back (called workset) in every iteration, delta iterations maintain state across iterations (called solution set), which can be updated through deltas. The result of the iterative computation is the state after the last iteration. Please refer to the [Introduction to Iterations]({{site.baseurl}}/docs/0.5/programming_guides/iterations.html) for an introduction to the basic principle of delta iterations.
 
-Defining a DeltaIteration is similar to defining a BulkIteration. For delta iterations, two data sets form the input to each iteration (workset and solution set), and two data sets are produced as the result (new workset, solution set delta) in each iteration. 
+Defining a DeltaIteration is similar to defining a BulkIteration. For delta iterations, two data sets form the input to each iteration (workset and solution set), and two data sets are produced as the result (new workset, solution set delta) in each iteration.
 
 To create a DeltaIteration call the `iterateDelta(DataSet, int, int)` (or `iterateDelta(DataSet, int, int[])` respectively). This method is called on the initial solution set. The arguments are the initial delta set, the maximum number of iterations and the key positions. The returned `DeltaIterativeDataSet` can be used for operators inside the iteration and represents the work set. You can access the solution set by joining with the returned DataSet from `iteration.getSolutionSet()`.
 
@@ -1220,14 +1218,14 @@ As described in the [program skeleton](#skeleton) section, Stratosphere programs
 
 #### Packaging Programs
 
-To support execution from a packaged JAR file via the command line or web interface, a program must use the environment obtained by `ExecutionEnvironment.getExecutionEnvironment()`. This environment will act as the cluster's environment when the JAR is submitted to the command line or web interface. If the Stratosphere program is invoked differently than through these interfaces, the environment will act like a local environment. 
+To support execution from a packaged JAR file via the command line or web interface, a program must use the environment obtained by `ExecutionEnvironment.getExecutionEnvironment()`. This environment will act as the cluster's environment when the JAR is submitted to the command line or web interface. If the Stratosphere program is invoked differently than through these interfaces, the environment will act like a local environment.
 
 To package the program, simply export all involved classes as a JAR file. The JAR file's manifest must point to the class that contains the program's *entry point* (the class with the `public void main(String[])` method). The simplest way to do this is by putting the *main-class* entry into the manifest (such as `main-class: eu.stratosphere.example.MyProgram`). The *main-class* attribute is the same one that is used by the Java Virtual Machine to find the main method when executing a JAR files through the command `java -jar pathToTheJarFile`. Most IDEs offer to include that attribute automatically when exporting JAR files.
 
 
 #### Packaging Programs through Plans
 
-Additionally, the Java API supports packaging programs as *Plans*. This method resembles the way that the *Scala API* package programs. Instead of defining a progam in the main method and calling `execute()` on the environment, plan packaging returns the *Program Plan*, which is a description of the program's data flow. To do that, the program must implement the `eu.stratosphere.api.common.Program` interface, defining the `getPlan(String...)` method. The strings passed to that method are the command line arguments. The program's plan can be created from the environment via the `ExecutionEnvironment#createProgramPlan()` method. When packaging the program's plan, the JAR manifest must point to the class implementing the `eu.stratosphere.api.common.Program` interface, instead of the class with the main method.
+Additionally, the Java API supports packaging programs as *Plans*. This method resembles the way that the *Scala API* packages programs. Instead of defining a progam in the main method and calling `execute()` on the environment, plan packaging returns the *Program Plan*, which is a description of the program's data flow. To do that, the program must implement the `eu.stratosphere.api.common.Program` interface, defining the `getPlan(String...)` method. The strings passed to that method are the command line arguments. The program's plan can be created from the environment via the `ExecutionEnvironment#createProgramPlan()` method. When packaging the program's plan, the JAR manifest must point to the class implementing the `eu.stratosphere.api.common.Program` interface, instead of the class with the main method.
 
 
 #### Summary
@@ -1256,15 +1254,16 @@ Stratosphere currently has the following **built-in accumulators**. Each of them
 
 __How to use accumulators:__
 
-First you have to create an accumulator object (here a counter) in the stub where you want to use it.
+First you have to create an accumulator object (here a counter) in the operator function where you want to use it. Operator function here refers to the (anonymous inner)
+class implementing the user defined code for an operator.
 
     private IntCounter numLines = new IntCounter();
 
-Second you have to register the accumulator object, typically in the ```open()``` method of the stub. Here you also define the name.
+Second you have to register the accumulator object, typically in the ```open()``` method of the operator function. Here you also define the name.
 
     getRuntimeContext().addAccumulator("num-lines", this.numLines);
 
-You can now use the accumulator anywhere in the stub, including in the ```open()``` and ```close()``` methods.
+You can now use the accumulator anywhere in the operator function, including in the ```open()``` and ```close()``` methods.
 
     this.numLines.add(1);
 
@@ -1272,7 +1271,7 @@ The overall result will be stored in the ```JobExecutionResult``` object which i
 
     myJobExecutionResult.getAccumulatorResult("num-lines")
 
-All accumulators share a single namespace per job. Thus you can use the same accumulator in different stubs of your job. Stratosphere will internally merge all accumulators with the same name.
+All accumulators share a single namespace per job. Thus you can use the same accumulator in different operator functions of your job. Stratosphere will internally merge all accumulators with the same name.
 
 Please look at the [WordCountAccumulator example](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/record/wordcount/WordCountAccumulators.java) for a complete example.
 
@@ -1300,9 +1299,9 @@ Stratosphere 0.5 comes packaged with a visualization tool for execution plans. T
 The following code shows how to print the execution plan JSON from your program:
 
     final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
-    
+
     ...
-    
+
     System.out.println(env.getExecutionPlan());
 
 
