@@ -652,7 +652,7 @@ There are some common aggregation operations that are frequently used. The Aggre
 - Max, and
 - Average.
 
-The Aggregate transformation can only be applied on a `Tuple` `DataSet`.
+The Aggregate transformation can only be applied on a `Tuple` `DataSet` and supports only field positions keys for grouping.
 
 The following code shows how to apply an Aggregation transformation on a `DataSet` grouped by field position keys:
 
@@ -666,6 +666,9 @@ DataSet<Tuple3<Integer, String, Double>> output = input
                                           // compute average of the third field
                                           .and(AVG, 2);
 ```
+
+To apply multiple aggregations on a DataSet it is necessary to use the `.and()` function after the first aggregate, that means `.aggregate(SUM, 0).and(AVG, 2)` produces the sum of field 0 and the average of field 2 of the original DataSet. 
+In contrast to that `.aggregate(SUM, 0).aggregate(AVG, 2)` will apply an aggregation on an aggregation. In the given example it would produce the average of field 2 after calculating the sum of field 0 grouped by field 1.
 
 **Note:** Right now, aggregation functions are type preserving. This means that for example computing the average of Integer values will yield an Integer value, i.e., the result is rounded.
 The set of aggregation functions will be extended in the future.
