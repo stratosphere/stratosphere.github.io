@@ -42,9 +42,8 @@ $( document ).ready(function() {
         <div class="banner">
             <div class="text" style="text-align: center; font-size: 0.6em; position:relative;">
 <div style="margin-top: -2px;line-height:120%"> 
-<a href="{{ site.baseurl }}/blog/apache/2014/04/17/stratosphere-goes-apache-incubator.html">Soon in  <br/> <span style="font-size: 1.1em;">Apache Incubator</span></a></div>
+<a href="{{ site.baseurl }}/blog/apache/2014/04/16/stratosphere-goes-apache-incubator.html">Soon in  <br/> <span style="font-size: 1.1em;">Apache Incubator</span></a></div>
 </div>
-
         </div>
     </div>
     <!-- END RIBBON -->
@@ -67,7 +66,7 @@ $( document ).ready(function() {
     <div class="col-md-12">
 
       <h2><strong>Stratosphere is the next generation Big Data Analytics Platform</strong>.</h2>
-      <p class="lead">It combines the strengths of MapReduce/Hadoop with powerful programming abstractions in Java and Scala and a high performance runtime. Stratosphere has native support for iterations, incremental iterations, and programs consisting of large DAGs of operations.</p>
+      <p class="lead">It features powerful programming abstractions in Java and Scala, a high-performance runtime, and automatic program optimization. Stratosphere has native support for iterations, incremental iterations, and programs consisting of large DAGs of operations.</p>
     </div>
   </div>
   <div class="row feature-highlights">
@@ -163,7 +162,8 @@ $( document ).ready(function() {
 
   <div class="row">
     <div class="col-md-6">
-      <p>You can write your parallel, distributed applications for Stratosphere in Java or <a href="http://scala-lang.org" target="_blanc">Scala</a>. The Java API will feel similar to Hadoop's MapReduce abstraction, but offers more functions and a more flexible data model. Scala is a functional object oriented programming language with powerful language features. Stratosphere's Scala API supports fluent and concise, yet efficient, analysis programs. Behind the scenes, Stratosphere uses code generation techniques to bridge between the Scala language and the runtime.</p>
+      <p>You can write data analysis programs for Stratosphere in Java or <a href="http://scala-lang.org" target="_blanc">Scala</a>. Both APIs provide a powerful yet easy-to-use abstraction to compose data analysis programs by applying customizable transformations such as map, filter, reduce, and join on data sets. Stratosphere's high-level APIs hide the complexities of parallel programming and efficient data processing from the user. Behind the scenes, the Stratosphere optimizer compiles such programs into efficient, parallel data flows which are executed on a cluster or a local machine.
+      </p>
     <i class="icon-arrow-right"></i> <a href="{{ site.baseurl }}/quickstart">See our Quickstart guides for Scala and Java</a>
     </div>
     <div class="col-md-6">
@@ -212,6 +212,22 @@ val plan = new ScalaPlan(Seq(output))
         </ul>
       </p>
       <p>Stratosphere <b>natively executes iterative algorithms</b>. The result of the last operator is fed back to the input of the first operator (in-memory). It is not required to start a new job on each iteration. Stratosphere detects which parts of the data need processing for further iterations. Only those are loaded.</p>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="row" id="feature_runtime">
+    <div class="col-md-12">
+      <h3><strong>High-Performance Execution Runtime</strong></h3>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <p>Stratosphere features its own high-performance, massively-parallel execution runtime which has been built from ground up leveraging processing techniques of parallel database systems. The engine supports low-latency processing concepts such as pipelined execution, in-memory processing, and push-based data shipping as well as sort- and hash-based processing algorithms which go gracefully out-of-core if main memory is not sufficient.
+    </div>
+    <div class="col-md-6">
+      <img src="{{ site.baseurl }}/img/Stratosphere_Execution.svg" onerror="this.onerror=null; this.src='{{ site.baseurl }}/img/Stratosphere_Execution.svg'" class="img-responsive">
     </div>
   </div>
 
