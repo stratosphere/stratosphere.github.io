@@ -6,9 +6,9 @@ title:  "Command Line Interface"
 ## Command Line Interface
 
 Stratosphere provides a command line interface to run programs that are packages as JAR files, and control their execution. 
-The command line interface is part of any Stratosphere setup, available in local single node setups, and in distributed setups. It is located under `<stratosphere-home>/bin/stratosphere`, and targets the running Stratosphere master (JobManager) that was started from the same installation directory.
+The command line interface is part of any Stratosphere setup, available in local single node setups and in distributed setups. It is located under `<stratosphere-home>/bin/stratosphere` and connects by default to the running Stratosphere master (JobManager) that was started from the same installation directory.
 
-A prerequisite to using the command line interface is that the Stratosphere master (JobManager) has been started (via `start-local.sh` or `start-cluster.sh`).
+A prerequisite to using the command line interface is that the Stratosphere master (JobManager) has been started (via `<stratosphere-home>/bin/start-local.sh` or `<stratosphere-home>/bin/start-cluster.sh`).
 
 The command line can be used to
 
@@ -33,9 +33,9 @@ Action "run" - compiles and submits a Stratosphere program that is given in the 
 
   "run" options:
 
-     -p,--parallelism <parallelism> The degree of parallelism for the execution. This value is used unless the program overrides the degree of parallelism on the execution environment or program plan (see link to ../programming_guides/java#skeleton) for details. If this option is not set, then the execution will use the default parallelism specified in the stratosphere-conf.yaml file.
+     -p,--parallelism <parallelism> The degree of parallelism for the execution. This value is used unless the program overrides the degree of parallelism on the execution environment or program plan. If this option is not set, then the execution will use the default parallelism specified in the stratosphere-conf.yaml file.
 
-     -c,--class <classname>         The class with the entry point (main method, or getPlan() method). Needs only be specified if the JAR file has no manifest pointing to that class. See (link to ../programming_guides/java#packaging) for details.
+     -c,--class <classname>         The class with the entry point (main method, or getPlan() method). Needs only be specified if the JAR file has no manifest pointing to that class. See program packaging instructions for details.
 
      -m,--jobmanager <host:port>    Option to submit the program to a different Stratosphere master (JobManager).
 
@@ -50,11 +50,11 @@ Action "info" - displays information about a Stratosphere program.
   "info" action arguments:
      -d,--description               Show description of the program, if the main class implements the 'ProgramDescription' interface.
 
-     -e,--plan                      Show the execution data flow plan of the program, in JSON representation.
+     -e,--executionplan             Show the execution data flow plan of the program, in JSON representation.
 
      -p,--parallelism <parallelism> The degree of parallelism for the execution, see above. The parallelism is relevant for the execution plan. The option is only evaluated if used together with the -e option.
 
-     -c,--class <classname>         The class with the entry point (main method, or getPlan() method). Needs only be specified if the JAR file has no manifest pointing to that class. See (link to ../programming_guides/java#packaging) for details.
+     -c,--class <classname>         The class with the entry point (main method, or getPlan() method). Needs only be specified if the JAR file has no manifest pointing to that class. See program packaging instructions for details.
 
      -m,--jobmanager <host:port>    Option to connect to a different Stratosphere master (JobManager). Connecting to a master is relevant to compile the execution plan. The option is only evaluated if used together with the -e option.
 
@@ -70,7 +70,7 @@ Action "list" lists submitted Stratosphere programs.
 
      -r,--running                   Show running programs and their JobIDs
 
-     -s,--scheduled                 Show scheduled prorgrams and their JobIDs
+     -s,--scheduled                 Show scheduled programs and their JobIDs
 
      -m,--jobmanager <host:port>    Option to connect to a different Stratosphere master (JobManager).
 
@@ -86,15 +86,14 @@ Action "cancel" cancels a submitted Stratosphere program.
 
 -   Run example program with no arguments.
 
-        ./bin/stratosphere run ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
-                               -a 4 file:///home/user/hamlet.txt file:///home/user/wordcount_out
+        ./bin/stratosphere run ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar
 
--   Run example program with arguments for intput and result files
+-   Run example program with arguments for input and result files
 
         ./bin/stratosphere run ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
                                file:///home/user/hamlet.txt file:///home/user/wordcount_out
 
--   Run example program with parallelism 16 and arguments for intput and result files
+-   Run example program with parallelism 16 and arguments for input and result files
 
         ./bin/stratosphere run -p 16 ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
                                 file:///home/user/hamlet.txt file:///home/user/wordcount_out
@@ -112,7 +111,7 @@ Action "cancel" cancels a submitted Stratosphere program.
 
 -   Display the optimized execution plan for the WordCount example program as JSON:
 
-        ./bin/stratosphere info -p 
+        ./bin/stratosphere info -e 
                                 ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
                                 file:///home/user/hamlet.txt file:///home/user/wordcount_out
 
