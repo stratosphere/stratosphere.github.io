@@ -1023,20 +1023,68 @@ To be written.
 <section id="debugging">
 Debugging
 ---------
-Collection source/sink provides you an easy way to test your program locally. It will save a lot of your debugging time.
 
-__How to test with collection source/sink:__
+Before running a data analysis program on a large data set in a distributed cluster, it is a good idea to make sure that the implemented algorithm works as desired. Hence, implementing data analysis programs is usually an incremental process of checking results, debugging, and improving. 
 
-To generate the ```DataSet``` from array, collection or even iterator that implements ```Serializable```, you can use the following methods in the ```ExecutionEnvironment```.
-  
-  - ```fromElements(X... data)```
-  - ```fromCollection(Collection<X> data)```
-  - ```fromCollection(Iterator<X> data, Class<X> elementType)```
+<p>
+Stratosphere provides a few nice features to significantly ease the development process of data analysis programs by supporting local debugging from within an IDE, injection of test data, and collection of result data. This section give some hints how to ease the development of Stratosphere programs.
+</p>
 
-To store the result into a collection, you can pass a ```LocalCollectionOutputFormat``` object to ```output(OutputFormat)``` method.
+### Local Execution Environment
 
-    List<String> resultsCollected = new ArrayList<String>();
-    result.output(new LocalCollectionOutputFormat(resultsCollected));
+A `LocalEnvironment` starts a Stratosphere system within the same JVM process it was created in. If you start the LocalEnvironement from an IDE, you can set breakpoint in your code and easily debug your program. 
+
+<p>
+A LocalEnvironment is created and used as follows:
+</p>
+
+```java
+final ExecutionEnvironment env = ExecutionEnvironment.createLocalEnvironment();
+
+DataSet<String> lines = env.readTextFile(pathToTextFile);
+// build your program
+
+env.execute();
+
+```
+
+### Collection Data Sources and Sinks
+
+Providing input for an analysis program and checking its output is cumbersome done by creating input files and reading output files. Stratosphere features special data sources and sinks which are backed by Java collections to ease testing. Once a program has been tested, the sources and sinks can be easily replaced by sources and sinks that read from / write to external data stores such as HDFS.
+
+<p>
+Collection data sources can be used as follows:
+</p>
+
+```java
+final ExecutionEnvironment env = ExecutionEnvironment.createLocalEnvironment();
+
+// Create a DataSet from a list of elements
+DataSet<Integer> myInts = env.fromElements(1, 2, 3, 4, 5);
+
+// Create a DataSet from any Java collection
+List<Tuple2<String, Integer>> data = ...
+DataSet<Tuple2<String, Integer>> myTuples = env.fromCollection(data);
+
+// Create a DataSet from an Iterator
+Iterator<Long> longIt = ...
+DataSet<Long> myLongs = env.fromCollection(longIt, Long.class);
+```
+
+**Note:** Currently, the collection data source requires that data types and iterators implement `Serializable`. Furthermore, collection data sources can not be executed in parallel (degree of parallelism = 1).
+
+<p>
+A collection data sink is specified as follows:
+</p>
+
+```java
+DataSet<Tuple2<String, Integer>> myResult = ...
+
+List<Tuple2<String, Integer>> outData = new ArrayList<Tuple2<String, Integer>>();
+myResult.output(new LocalCollectionOutputFormat(outData));
+```
+
+**Note:** Collection data sources will only work correctly, if the whole program is executed in the same JVM!
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -1047,7 +1095,7 @@ Iteration Operators
 
 Iterations implement loops in Stratosphere programs. The iteration operators encapsulate a part of the program and execute it repeatedly, feeding back the result of one iteration (the partial solution) into the next iteration. There are two types of iterations in Stratosphere: **BulkIteration** and **DeltaIteration**.
 
-This section provides quick examples on how to use both operators. Check out the [Introduction to Iterations]({{site.baseurl}}/docs/0.5/programming_guides/iterations.html) page for a more detailed introduction.as
+This section provides quick examples on how to use both operators. Check out the [Introduction to Iterations]({{site.baseurl}}/docs/0.5/programming_guides/iterations.html) page for a more detailed introduction.
 
 #### Bulk Iterations
 
