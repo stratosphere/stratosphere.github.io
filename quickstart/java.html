@@ -61,7 +61,7 @@ $ mvn archetype:generate                             \
 <section id="next_steps">
   <div class="page-header"><h2>Next Steps</h2></div>
   <p class="lead"><strong>Write your application!</strong></p>
-  <p>The quickstart project contains the classical Word Count (“Hello World” of Big Data) example. The goal of Word count is to determine the number of occurrences of each word in a text. So imagine you want to know how often the term "the" or "house" occurs in all Wikipedia texts. The result is a file that has a line for each term and its count.</p>
+  <p>The quickstart project contains a WordCount implementation, the "Hello World" of Big Data processing systems. The goal of WordCount is to determine the frequencies of words in a text, e.g., how often do the terms "the" or "house" occurs in all Wikipedia texts.</p>
  <br>
 <b>Sample Input:</b> <br>
 {% highlight bash %}
@@ -73,63 +73,63 @@ big 2
 data 1
 is 1
 {% endhighlight %}
-<p>This code shows how the plan for Word Count is created. You see a source
-(FileDataSource), two operators (map and reduce), and a sink (CsvOutputFormat).</p>
+
+<p>The following code shows the WordCount implementation from the Quickstart which processes some text lines with two operators (FlatMap and Reduce), and writes the prints the resulting words and counts to std-out.</p>
 
 {% highlight java %}
-public class WordCount implements Program {
+public class WordCount {
+  
+  public static void main(String[] args) throws Exception {
+    
+    // set up the execution environment
+    final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+    
+    // get input data
+    DataSet<String> text = env.fromElements(
+        "To be, or not to be,--that is the question:--",
+        "Whether 'tis nobler in the mind to suffer",
+        "The slings and arrows of outrageous fortune",
+        "Or to take arms against a sea of troubles,"
+        );
+    
+    DataSet<Tuple2<String, Integer>> counts = 
+        // split up the lines in pairs (2-tuples) containing: (word,1)
+        text.flatMap(new LineSplitter())
+        // group by the tuple field "0" and sum up tuple field "1"
+        .groupBy(0)
+        .aggregate(Aggregations.SUM, 1);
 
-    @Override
-    public Plan getPlan(String... args) {
-        FileDataSource source = new FileDataSource(new TextInputFormat(), inputPath, "Input Lines");
-
-        MapOperator mapper = MapOperator.builder(new SplitWords())
-            .input(source)
-            .name("Tokenize Lines")
-            .build();
-
-        ReduceOperator reducer = ReduceOperator.builder(new CountWords(), StringValue.class, 0)
-            .input(mapper)
-            .name("Count Words")
-            .build();
-
-        FileDataSink sink = new FileDataSink(new CsvOutputFormat(), outputPath, reducer, "Word Counts"); 
-        CsvOutputFormat.configureRecordFormat(sink)
-            .recordDelimiter('\n')
-            .fieldDelimiter(' ')
-            .field(StringValue.class, 0)
-            .field(IntValue.class, 1);
-
-        return new Plan(sink, "Word Count Example");
-    }
+    // emit result
+    counts.print();
+    
+    // execute program
+    env.execute("WordCount Example");
+  }
 }
 {% endhighlight %}
 
-<p>The operations are defined by specialized classes, here the SplitWords and
-CountWords classes. The following snippet shows the implementation of the SplitWords class:</p>
+<p>The operations are defined by specialized classes, here the LineSplitter class.</p>
 
 {% highlight java %}
-public static class SplitWords extends MapFunction {
+public class LineSplitter extends FlatMapFunction<String, Tuple2<String, Integer>> {
 
-    private final Record output = new Record();
-    private final StringValue word = new StringValue();
-    private final IntValue one = new IntValue(1);
-
-    @Override
-    public void map(Record record, Collector<Record> collector) {
-        StringValue line = record.getField(0, StringValue.class);
-
-        for (String currentWord : line.getValue().split("")) {
-            this.word.setValue(currentWord);
-            this.output.setField(0, this.word);
-            this.output.setField(1, this.one);
-            collector.collect(this.output);
-        }
+  @Override
+  public void flatMap(String value, Collector<Tuple2<String, Integer>> out) {
+    // normalize and split the line into words
+    String[] tokens = value.toLowerCase().split("\\W+");
+    
+    // emit the pairs
+    for (String token : tokens) {
+      if (token.length() > 0) {
+        out.collect(new Tuple2<String, Integer>(token, 1));
+      }
     }
+  }
 }
+
 {% endhighlight %}
 
-<p><a href="(https://github.com/stratosphere/stratosphere/blob/release-{{site.current_stable}}/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/record/wordcount/WordCount.java?source=cc">Check GitHub</a> for the full example code.</p>
+<p><a href="https://github.com/stratosphere/stratosphere/blob/release-{{site.current_stable}}/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/wordcount/WordCount.java">Check GitHub</a> for the full example code.</p>
 
-<p class="lead">For a complete overview over our Java API, have a look at the <a href="{{ site.baseurl }}/docs/{{site.current_stable_documentation}}/programming_guides/java.html">Stratosphere Documentation</a>. If you have any trouble, ask on our <a href="https://groups.google.com/forum/#!forum/stratosphere-dev">Mailing list</a>. We are happy to provide help.</p>
+<p class="lead">For a complete overview over our Java API, have a look at the <a href="{{ site.baseurl }}/docs/{{site.current_stable_documentation}}/programming_guides/java.html">Stratosphere Documentation</a> and <a href="{{ site.baseurl }}/docs/{{site.current_stable_documentation}}/programming_guides/examples_java.html">further example programs</a>. If you have any trouble, ask on our <a href="https://groups.google.com/forum/#!forum/stratosphere-dev">Mailing list</a>. We are happy to provide help.</p>
 </section>
