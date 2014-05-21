@@ -1,13 +1,16 @@
 ---
 layout: inner_docs_v05
-title:  "CLI Client"
+title:  "Command Line Interface"
 ---
 
-<div class="panel panel-default"><div class="panel-body">Please note that parts of the documentation are out of sync. We are in the process of updating everything to reflect the changes of the upcoming release. If you have any questions, we are happy to help on our <a href="{{site.baseurl}}/project/contact/">Mailinglist</a> or on <a href="https://github.com/stratosphere/stratosphere/issues">GitHub</a>.</div></div>
+## Command Line Interface
 
-## CLI Client
+Stratosphere provides a command line interface to run programs that are packages as JAR files, and control their execution. 
+The command line interface is part of any Stratosphere setup, available in local single node setups, and in distributed setups. It is located under `<stratosphere-home>/bin/stratosphere`, and targets the running Stratosphere master (JobManager) that was started from the same installation directory.
 
-Stratosphere provides a commandline client to:
+A prerequisite to using the command line interface is that the Stratosphere master (JobManager) has been started (via `start-local.sh` or `start-cluster.sh`).
+
+The command line can be used to
 
 - submit jobs for execution,
 - cancel a running job,
@@ -16,75 +19,106 @@ Stratosphere provides a commandline client to:
 
 ### Usage
 
-The client is used as follows:
+The command line syntax is as follows:
 
 ```
-./stratosphere [ACTION] [GENERAL_OPTIONS] [ACTION_ARGUMENTS]
-  general options:
-     -h,--help      Show the help for the CLI Frontend.
+./stratosphere <ACTION> [OPTIONS] [ARGUMENTS]
+
+General options:
+     -h,--help      Show the help for the CLI Frontend, or a specific action.
      -v,--verbose   Print more detailed error messages.
 
-Action "run" compiles and submits a Stratosphere program.
-  "run" action arguments:
-     -a,--arguments <programArgs>   Program arguments
-     -c,--class <classname>         Program class
-     -j,--jarfile <jarfile>         Stratosphere program JAR file
-     -m,--jobmanager <host:port>    Jobmanager to which the program is submitted
-     -w,--wait                      Wait for program to finish
 
-Action "info" displays information about a Stratosphere program.
+Action "run" - compiles and submits a Stratosphere program that is given in the form of a JAR file.
+
+  "run" options:
+
+     -p,--parallelism <parallelism> The degree of parallelism for the execution. This value is used unless the program overrides the degree of parallelism on the execution environment or program plan (see link to ../programming_guides/java#skeleton) for details. If this option is not set, then the execution will use the default parallelism specified in the stratosphere-conf.yaml file.
+
+     -c,--class <classname>         The class with the entry point (main method, or getPlan() method). Needs only be specified if the JAR file has no manifest pointing to that class. See (link to ../programming_guides/java#packaging) for details.
+
+     -m,--jobmanager <host:port>    Option to submit the program to a different Stratosphere master (JobManager).
+
+  "run" arguments:
+
+     - The first argument is the path to the JAR file of the program.
+     - All successive arguments are passed to the program's main method (or getPlan() method).
+
+
+Action "info" - displays information about a Stratosphere program.
+
   "info" action arguments:
-     -a,--arguments <programArgs>   Program arguments
-     -c,--class <classname>         Program class
-     -d,--description               Show description of expected program arguments
-     -j,--jarfile <jarfile>         Stratosphere program JAR file
-     -p,--plan                      Show optimized execution plan of the
-                                    program (JSON)
+     -d,--description               Show description of the program, if the main class implements the 'ProgramDescription' interface.
+
+     -e,--plan                      Show the execution data flow plan of the program, in JSON representation.
+
+     -p,--parallelism <parallelism> The degree of parallelism for the execution, see above. The parallelism is relevant for the execution plan. The option is only evaluated if used together with the -e option.
+
+     -c,--class <classname>         The class with the entry point (main method, or getPlan() method). Needs only be specified if the JAR file has no manifest pointing to that class. See (link to ../programming_guides/java#packaging) for details.
+
+     -m,--jobmanager <host:port>    Option to connect to a different Stratosphere master (JobManager). Connecting to a master is relevant to compile the execution plan. The option is only evaluated if used together with the -e option.
+
+  "info" arguments:
+
+     - The first argument is the path to the JAR file of the program.
+     - All successive arguments are passed to the program's main method (or getPlan() method).
+
 
 Action "list" lists submitted Stratosphere programs.
+
   "list" action arguments:
-     -r,--running     Show running programs and their JobIDs
-     -s,--scheduled   Show scheduled prorgrams and their JobIDs
+
+     -r,--running                   Show running programs and their JobIDs
+
+     -s,--scheduled                 Show scheduled prorgrams and their JobIDs
+
+     -m,--jobmanager <host:port>    Option to connect to a different Stratosphere master (JobManager).
+
 
 Action "cancel" cancels a submitted Stratosphere program.
+
   "cancel" action arguments:
-     -i,--jobid <jobID>   JobID of program to cancel
+
+     -i,--jobid <jobID>             JobID of program to cancel
 ```
 
 ### Example Usage:
 
--   Run WordCount example program on the JobManager configured in */conf/stratosphere.yaml*:
+-   Run example program with no arguments.
 
-        ./bin/stratosphere run -j ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
+        ./bin/stratosphere run ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
                                -a 4 file:///home/user/hamlet.txt file:///home/user/wordcount_out
 
-- Run WordCount example program on a specific JobManager:
+-   Run example program with arguments for intput and result files
+
+        ./bin/stratosphere run ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
+                               file:///home/user/hamlet.txt file:///home/user/wordcount_out
+
+-   Run example program with parallelism 16 and arguments for intput and result files
+
+        ./bin/stratosphere run -p 16 ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
+                                file:///home/user/hamlet.txt file:///home/user/wordcount_out
+
+-   Run example program on a specific JobManager:
 
         ./bin/stratosphere run -m myJMHost:6123 \
-                               -j ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
-                               -a 4 file:///home/user/hamlet.txt file:///home/user/wordcount_out
+                               ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
+                               -file:///home/user/hamlet.txt file:///home/user/wordcount_out
 
--   Run WordCount example program (program class not defined in the JAR file manifest):
-
-        ./bin/stratosphere run -j ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
-                               -c eu.stratosphere.example.java.record.wordcount.WordCount \
-                               -a 4 file:///home/user/hamlet.txt file:///home/user/wordcount_out
 
 -   Display the expected arguments for the WordCount example program:
 
-        ./bin/stratosphere info -d \
-                                -j ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar
+        ./bin/stratosphere info -d ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar
 
 -   Display the optimized execution plan for the WordCount example program as JSON:
 
-        ./bin/stratosphere info -p \
-                                -j ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
-                                -a 4 file:///home/user/hamlet.txt file:///home/user/wordcount_out
+        ./bin/stratosphere info -p 
+                                ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
+                                file:///home/user/hamlet.txt file:///home/user/wordcount_out
 
 -   List scheduled and running jobs (including their JobIDs):
 
-        ./bin/stratosphere list -s \
-                                -r
+        ./bin/stratosphere list -s -r
 
 -   Cancel a job:
 
