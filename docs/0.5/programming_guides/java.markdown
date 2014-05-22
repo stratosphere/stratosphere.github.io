@@ -1006,7 +1006,71 @@ DataSet<Tuple2<String, Integer>> unioned = vals1.union(vals2)
 Data Sources
 ------------
 
-To be written.
+DataSets are created by Data Sources. Basically, a data source generates a sequence of data items which can be processed by subsequent transformations. The data which is turned into data items by a data source can originate from any external sources. It can be read from a file, queried from a database or key-value store, or even be generated on the fly.
+
+In the following we show how to create DataSets using some common data sources as well as generic InputFormats.
+
+### Read Data from text files
+
+The following examples show some common ways to read text files:
+
+```java
+final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+
+// read text file from local files system
+DataSet<String> localLines = env.readTextFile("file:///path/to/my/textfile");
+
+// read text file from a HDFS running at nnHost:nnPort
+DataSet<String> hdfsLines = env.readTextFile("hdfs://nnHost:nnPort/path/to/my/textfile");
+
+// read 1st (int), 3rd (double), and 6th (String) fields of a CSV file
+DataSet<Tuple3<Integer, Double, String>> csvData = 
+    env.readCsvFile("file:///path/to/my/csvfile")
+    // set field and line delimiters
+    .fieldDelimiter('|').lineDelimiter("\n")
+    // select fields to include
+    .includeFields("10100100")
+    // give types of fields
+    .types(Integer.class, Double.class, String.class);
+```
+
+### Read Data using generic InputFormats
+
+Stratosphere uses the abstraction of InputFormats to read data from any data store (very similar to Hadoop MR). An InputFormat defines how a data source can be divided into individual splits which can be read in parallel, how to read the data of a source, and finally how to generate data items from it. This is a very generic way of handling input data. You can implement your own InputFormat to read any data and generate data items from it. Stratosphere provides a couple of abstract base classes to ease the implementation of custom file-based InputFormats.
+
+The following examples show how to create DataSets using some InputFormats which are provided by Stratosphere:
+
+```java
+final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+
+// Read text lines using a TextInputFormat
+DataSet<String> textLines = 
+    env.createInput(
+      // create and configure input format
+      new TextInputFormat(new Path("file:///path/to/my/textfile")), 
+      // specify type information for DataSet
+      BasicTypeInfo.STRING_TYPE_INFO
+    );
+
+// Read data from a relational database using the JDBC input format
+DataSet<Tuple2<String, Integer> dbData = 
+    env.createInput(
+      // create and configure input format
+      JDBCInputFormat.buildJDBCInputFormat()
+                     .setDrivername("org.apache.derby.jdbc.EmbeddedDriver")
+                     .setDBUrl("jdbc:derby:memory:persons")
+                     .setQuery("select name, age from persons")
+                     .finish(),
+      // specify type information for DataSet
+      new TupleTypeInfo(Tuple2.class, STRING_TYPE_INFO, INT_TYPE_INFO)
+    );
+
+```
+**Note:** Stratosphere's program compiler needs to infer the data types of the data items which are returned by an InputFormat. If this information cannot be automatically inferred, it is necessary to manually provide the type information as shown in the examples above.
+
+### Read Data from Java Collections
+
+Stratosphere also provides a data source to read from Java collections. This feature is especially beneficial when developing and debugging data analysis programs. Please find details about collection data sources in the [Debugging](#debugging) section.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -1015,7 +1079,62 @@ To be written.
 Data Sinks
 ----------
 
-To be written.
+Data Sinks are used to emit DataSets which are produced by a Stratosphere program. Stratosphere provides different build-in DataSinks but also supports the generic abstraction of OutputFormats (very similar to Hadoop MR). Implement your own OutputFormat to write the result of a Stratosphere program in any format to any location you like.
+
+In the following we show some examples how to emit data from a Stratosphere program.
+
+### Print DataSet to Standard-Out
+
+```java
+DataSet<Tuple3<String, Integer, Double>> myResult = [...]
+
+// write DataSet to std-out using the toString() method of the data type
+myResult.print();
+
+// write DataSet to std-err using the toString() method of the data type
+myResult.printToErr();
+```
+
+### Write DataSet to a text file
+
+```java
+DataSet<Tuple3<String, Integer, Double>> myResult = [...]
+
+// write DataSet to a file on the local file system
+myResult.writeAsText("file:///my/result/on/localFS");
+
+// write DataSet to a file on a HDFS with a namenode running at nnHost:nnPort
+myResult.writeAsText("hdfs://nnHost:nnPort/my/result/on/localFS");
+
+// write DataSet to a file and overwrite the file if it exists
+myResult.writeAsText("file:///my/result/on/localFS", WriteMode.OVERWRITE);
+
+// write DataSet to a CSV file with new-line ('\n') as record and blank (' ') as field separators
+myResult.writeAsCsv("file:///my/result/on/localFS", "\n", " ");
+```
+**NOTE:** Only Tuple DataSets can be written to CSV files.
+
+
+### Write DataSet using a generic OutputFormat
+
+```
+DataSet<Tuple3<String, Integer, Double>> myResult = [...]
+
+// write Tuple DataSet to a relational database
+myResult.output(
+    // build and configure OutputFormat
+    JDBCOutputFormat.buildJDBCOutputFormat()
+                    .setDrivername("org.apache.derby.jdbc.EmbeddedDriver")
+                    .setDBUrl("jdbc:derby:memory:persons")
+                    .setQuery("insert into persons (name, age, height) values (?,?,?)")
+                    .finish()
+    );
+
+```
+
+### Insert DataSet into Java Collection
+
+Stratosphere also provides a data sink to insert data to a Java collection. This feature is especially beneficial for developing, debugging, and testing of data analysis programs. Please find details about collection data sinks in the following [Debugging](#debugging) section.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
