@@ -29,7 +29,7 @@ cd stratosphere
 mkdir kmeans
 cd kmeans
 # run data generator
-java -cp ../examples/stratosphere-java-examples-0.5-SNAPSHOT-KMeansIterative.jar eu.stratosphere.example.java.record.kmeans.KMeansSampleDataGenerator 500 10 0.08
+java -cp ../examples/stratosphere-java-examples-0.5-SNAPSHOT-KMeans.jar eu.stratosphere.example.java.clustering.util.KMeansDataGenerator 500 10 0.08
   {% endhighlight %}
 The generator has the following arguments:
 {% highlight bash %}
