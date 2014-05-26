@@ -648,9 +648,8 @@ public class MyCombinableGroupReducer
 There are some common aggregation operations that are frequently used. The Aggregate transformation provides the following build-in aggregation functions:
 
 - Sum,
-- Min,
-- Max, and
-- Average.
+- Min, and
+- Max.
 
 The Aggregate transformation can only be applied on a `Tuple` `DataSet` and supports only field positions keys for grouping.
 
@@ -663,15 +662,14 @@ DataSet<Tuple3<Integer, String, Double>> output = input
                                           .groupBy(1)
                                           // compute sum of the first field
                                           .aggregate(SUM, 0)
-                                          // compute average of the third field
-                                          .and(AVG, 2);
+                                          // compute minimum of the third field
+                                          .and(MIN, 2);
 ```
 
-To apply multiple aggregations on a DataSet it is necessary to use the `.and()` function after the first aggregate, that means `.aggregate(SUM, 0).and(AVG, 2)` produces the sum of field 0 and the average of field 2 of the original DataSet. 
-In contrast to that `.aggregate(SUM, 0).aggregate(AVG, 2)` will apply an aggregation on an aggregation. In the given example it would produce the average of field 2 after calculating the sum of field 0 grouped by field 1.
+To apply multiple aggregations on a DataSet it is necessary to use the `.and()` function after the first aggregate, that means `.aggregate(SUM, 0).and(MIN, 2)` produces the sum of field 0 and the minimum of field 2 of the original DataSet. 
+In contrast to that `.aggregate(SUM, 0).aggregate(MIN, 2)` will apply an aggregation on an aggregation. In the given example it would produce the minimum of field 2 after calculating the sum of field 0 grouped by field 1.
 
-**Note:** Right now, aggregation functions are type preserving. This means that for example computing the average of Integer values will yield an Integer value, i.e., the result is rounded.
-The set of aggregation functions will be extended in the future.
+**Note:** The set of aggregation functions will be extended in the future.
 
 ### Reduce on full DataSet
 
@@ -716,9 +714,8 @@ DataSet<Double> output = input.reduceGroup(new MyGroupReducer());
 There are some common aggregation operations that are frequently used. The Aggregate transformation provides the following build-in aggregation functions:
 
 - Sum,
-- Min,
-- Max, and
-- Average.
+- Min, and
+- Max.
 
 The Aggregate transformation can only be applied on a `Tuple` `DataSet`.
 
@@ -729,11 +726,11 @@ DataSet<Tuple2<Integer, Double>> input = // [...]
 DataSet<Tuple2<Integer, Double>> output = input
                                           // compute sum of the first field
                                           .aggregate(SUM, 0)
-                                          // compute average of the second field
-                                          .and(AVG, 1);
+                                          // compute minimum of the second field
+                                          .and(MIN, 1);
 ```
 
-**Note:** Right now, aggregation functions are type preserving. This means that for example computing the average of Integer values will yield an Integer value, i.e., the result is rounded. In the current implementation, aggregation functions are not combinable. Therefore, aggregating a non-grouped Dataset can have severe performance implications. Improving the performance of built-in aggregation functions as well as extending the set of supported aggregation functions is on our roadmap.
+**Note:** Extending the set of supported aggregation functions is on our roadmap.
 
 ### Join
 
