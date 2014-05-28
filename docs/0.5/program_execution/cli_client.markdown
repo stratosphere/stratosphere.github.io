@@ -5,7 +5,7 @@ title:  "Command Line Interface"
 
 ## Command Line Interface
 
-Stratosphere provides a command line interface to run programs that are packages as JAR files, and control their execution. 
+Stratosphere provides a command line interface to run programs that are packaged as JAR files, and control their execution. 
 The command line interface is part of any Stratosphere setup, available in local single node setups and in distributed setups. It is located under `<stratosphere-home>/bin/stratosphere` and connects by default to the running Stratosphere master (JobManager) that was started from the same installation directory.
 
 A prerequisite to using the command line interface is that the Stratosphere master (JobManager) has been started (via `<stratosphere-home>/bin/start-local.sh` or `<stratosphere-home>/bin/start-cluster.sh`).
@@ -80,6 +80,8 @@ Action "cancel" cancels a submitted Stratosphere program.
   "cancel" action arguments:
 
      -i,--jobid <jobID>             JobID of program to cancel
+     
+     -m,--jobmanager <host:port>    Option to connect to a different Stratosphere master (JobManager).
 ```
 
 ### Example Usage:
