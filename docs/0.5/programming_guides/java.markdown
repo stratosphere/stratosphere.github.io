@@ -6,6 +6,7 @@ toc:
   - {anchor: "example", title: "Example Program"}
   - {anchor: "linking", title: "Linking"}
   - {anchor: "skeleton", title: "Program Skeleton"}
+  - {anchor: "lazyeval", title: "Lazy Evaluation"}
   - {anchor: "types", title: "Data Types"}
   - {anchor: "transformations", title: "Data Transformations"}
   - {anchor: "data_sources", title: "Data Sources"}
@@ -19,8 +20,6 @@ toc:
   - {anchor: "execution_plan", title: "Execution Plans"}
 ---
 
-<div class="panel panel-default"><div class="panel-body">Please note that parts of the documentation are out of sync. We are in the process of updating everything to reflect the changes of the upcoming release. If you have any questions, we are happy to help on our <a href="{{site.baseurl}}/project/contact/">Mailinglist</a> or on <a href="https://github.com/stratosphere/stratosphere/issues">GitHub</a>.</div></div>
-
 Java API
 ========
 
@@ -28,21 +27,11 @@ Java API
 Introduction
 ------------
 
-Analysis programs in Stratosphere are regular Java Programs that implement transformations on data sets (e.g., filtering, , mapping, joining, grouping). The data sets are initially created from certain sources (e.g., by reading files, or from collections). Results are written to sinks, which may for example write the data to (distributed) files, or to standard output (for example your terminal).
+Analysis programs in Stratosphere are regular Java programs that implement transformations on data sets (e.g., filtering, mapping, joining, grouping). The data sets are initially created from certain sources (e.g., by reading files, or from collections). Results are returned via sinks, which may for example write the data to (distributed) files, or to standard output (for example the command line terminal). Stratosphere programs run in a variety of contexts, standalone, or embedded in other programs. The execution can happen in a local JVM, or on clusters of many machines.
 
-Stratosphere programs can run in a variety of contexts, for example locally as standalone programs, locally embedded in other programs, or on clusters of many machines (see [program skeleton](#skeleton) for how to define different environments). All programs are executed lazily: When the program is run and transformation methods are invoked on a data set, it creates a transformation operation. That transformation operation is only executed once program execution is triggered on the environment. Whether the program is executed locally or on a cluster depends on the environment of the program.
+In order to create you own Stratosphere program, we encourage you to start with the [program skeleton](#skeleton) and gradually add your own [transformations](#transformations). The remaining sections act as references for additional operations and advanced features.
 
-The Java API is strongly typed: All data sets and transformations accept typed elements. This allows to catch typing errors very early and supports safe refactoring of programs.
 
-The sections on the [program skeleton](#skeleton) and [transformations](#transformations) show the general template of a program and describe the available transformations.
-
-<div class="panel panel-default">
-  <div class="panel-body">
-    <strong>
-    While most parts of the new Java API are already working, we are still in the process of stabilizing it. If you encounter any problems, feel free to <a href="https://github.com/stratosphere/stratosphere/issues">post an issue on GitHub</a> or <a href="https://groups.google.com/forum/#!forum/stratosphere-dev">write to our mailing list</a>. You can also check out our stable <a href="{{ site.baseurl }}/docs/0.4/programming_guides/java.html">Java Record API</a>, which is the default API of all previous versions.
-    </strong>
-  </div>
-</div>
 </section>
 
 <section id="toc">
@@ -102,7 +91,7 @@ Linking with Stratosphere
 
 To write programs with Stratosphere, you need to include Stratosphere’s Java API library in your project.
 
-The simplest way to do this is to use the [quickstart scripts]({{site.baseurl}}/quickstart/java.html). They create a blank project from a template (called Maven Archetype), which sets up everything for you. To manually create the project, you can use the archetype and create a project by calling:
+The simplest way to do this is to use the [quickstart scripts]({{site.baseurl}}/quickstart/java.html). They create a blank project from a template (a Maven Archetype), which sets up everything for you. To manually create the project, you can use the archetype and create a project by calling:
 
 {% highlight bash %}
 mvn archetype:generate /
@@ -111,7 +100,9 @@ mvn archetype:generate /
     -DarchetypeVersion={{site.docs_05_stable}}
 {% endhighlight %}
 
-If you want to add Stratosphere to an existing Maven project, add the following entry to your *dependencies* in the *pom.xml* file of your project:
+In order to link against the latest SNAPSHOT versions of the code, please follow [this guide]({{site.baseurl}}/downloads/#nightly).
+
+If you want to add Stratosphere to an existing Maven project, add the following entry to your *dependencies* section in the *pom.xml* file of your project:
 
 {% highlight xml %}
 <dependency>
@@ -126,7 +117,8 @@ If you want to add Stratosphere to an existing Maven project, add the following 
 </dependency>
 {% endhighlight %}
 
-The *stratosphere-clients* dependency is only necessary for a local execution environment. You only need to include it, if you want to execute Stratosphere programs on your local machine (for example for testing or debugging).
+The *stratosphere-clients* dependency is only necessary to invoke the Stratosphere program locally (for example to run it standalone for testing and debugging). 
+If you intend to only export the program as a JAR file and [run it on a cluster]({{site.baseurl}}/docs/0.5/program_execution/cluster_execution.html), you can skip that dependency.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -139,10 +131,10 @@ As we already saw in the example, Stratosphere programs look like regular Java
 programs with a `main()` method. Each program consists of the same basic parts:
 
 1. Obtain an `ExecutionEnvironment`,
-2. Load your data,
+2. Load/create the initial data,
 3. Specify transformations on this data,
-4. Specify where to store the results of your computations, and
-5. Execute your program on a cluster or on your local computer.
+4. Specify where to put the results of your computations, and
+5. Execute your program.
 
 We will now give an overview of each of those steps but please refer
 to the respective sections for more details. Note that all [core classes
@@ -165,14 +157,16 @@ Typically, you only need to use `getExecutionEnvironment()`, since this
 will do the right thing depending on the context: if you are executing
 your program inside an IDE or as a regular Java program it will create
 a local environment that will execute your program on your local machine. If
-you created a JAR file from you program, the Stratosphere cluster manager will
+you created a JAR file from you program, and invoke it through the [command line]({{site.baseurl}}/docs/0.5/program_execution/cli_client.html)
+or the [web interface]({{site.baseurl}}/docs/0.5/program_execution/web_interface.html),
+the Stratosphere cluster manager will
 execute your main method and `getExecutionEnvironment()` will return
 an execution environment for executing your program on a cluster.
 
 For specifying data sources the execution environment has several methods
 to read from files using various methods: you can just read them line by line,
 as CSV files, or using completely custom data input formats. To just read
-a text file you could use:
+a text file as a sequence of lines, you could use:
 
 ```java
 final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
@@ -217,7 +211,9 @@ print()
 ```
 
 The last method is only useful for developing/debugging on a local machine,
-it will output the contents of the `DataSet` to standard output.
+it will output the contents of the `DataSet` to standard output. (Note that in
+a cluster, the result goes to the standard out stream of the cluster nodes and ends
+up in the *.out* files of the workers).
 The first two do as the name suggests, the third one can be used to specify a
 custom data output format. Keep in mind, that these calls do not actually
 write to a file yet. Only when your program is completely specified and you
@@ -233,69 +229,38 @@ how you created the execution environment.
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
+<section id="lazyeval">
+Lazy Evaluation
+---------------
+
+All Stratosphere programs are executed lazily: When the program's main method is executed, the data loading and transformations do not happen directly. Rather, each operation is created and added to the program's plan. The operations are actually executed when the one of the `execute()` methods is invoked on the ExecutionEnvironment object. Whether the program is executed locally or on a cluster depends on the environment of the program.
+
+The lazy evaluation lets you construct sophisticated programs that Stratosphere executes as one holistically planned unit.
+</section>
+
 <section id="types">
 Data Types
 ----------
 
-Stratosphere's Java API allows the use of different data types for the input and output of operators.
-Both `DataSet` and functions like `MapFunction`, `ReduceFunction`, etc. are parameterized with data types using Java generics in order to ensure type-safety.
+The Java API is strongly typed: All data sets and transformations accept typed elements. This catches type errors very early and supports safe refactoring of programs. The API supports various different data types for the input and output of operators. Both `DataSet` and functions like `MapFunction`, `ReduceFunction`, etc. are parameterized with data types using Java generics in order to ensure type-safety.
 
-There are four different categories of data types:
+There are four different categories of data types, which are treated slightly different:
 
-1. **Basic Java Types**
+1. **Regular Types**
 2. **Tuples**
-3. **Custom Types**
-4. **Values**
+3. **Values**
+4. **Hadoop Writables**
 
-#### Basic Java Types
 
-The API supports all common basic Java types:
+#### Regular Types
 
-- `Short`, `Integer`, `Long`
-- `Float`, `Double`
-- `Byte`, `Boolean`
-- `Character`, `String`
+Out of the box, the Java API supports all common basic Java types: `Byte`, `Short`, `Integer`, `Long`, `Float`, `Double`, `Boolean`, `Character`, `String`.
 
-You can use all of them to parameterize both `DataSet` and function implementations, e.g. `DataSet<String>` for a `String` data set or `MapFunction<String, Integer>` for a mapper from `String` to `Integer`.
-
-{% highlight java %}
-DataSet<String> numbers = env.fromElements("1", "2");
-
-numbers.map(new MapFunction<String, Integer>() {
-    @Override
-    public String map(String value) throws Exception {
-        return Integer.parseInt(value);
-    }
-});
-{% endhighlight %}
-
-#### Tuples
-
-You can use the `Tuple` classes for ordered list of elements. The Java API provides classes from `Tuple1` up to `Tuple22`. Every field of a tuple can be an arbitrary Stratosphere type; including further tuples (nested tuples).
+Furthermore, you can use the vast majority of custom Java classes. Restrictions apply to classes containing fields that cannot be serialized, like File pointers, I/O streams, or other native resources. Classes that follow the Java Beans conventions work well in general. The following defines a simple example class to illustrate how you can use custom classes:
 
 ```java
-DataSet<Tuple2<String, Integer>> wordCounts = env.fromElements(
-    new Tuple2<String, Integer>("hello", 1),
-    new Tuple2<String, Integer>("world", 2));
+public class WordWithCount {
 
-wordCounts.map(new MapFunction<Tuple2<String, Integer>, Integer>() {
-    @Override
-    public String map(Tuple2<String, Integer> value) throws Exception {
-        return value.getField(1);
-    }
-});
-```
-
-Fields of a Tuple can be accessed directly by using `tuple.f4` or `tuple.getField(4)`. The field numbering starts with 0. In order to access fields
-more intuitively and generate more readable code, it is also possible to extend a subclass of `Tuple` and add getters and setters with custom names.
-
-#### Custom Types
-
-You can use your custom Java classes as Stratosphere types, if they are `Serializable`.
-Consider this simple class:
-
-```java
-public static class WordCount implements Serializable {
     public String word;
     public int count;
 
@@ -308,9 +273,21 @@ public static class WordCount implements Serializable {
 }
 ```
 
-You can now create a `DataSet<WordCount>` and run transformations, which operate on your custom type.
+You can use all of those types to parameterize `DataSet` and function implementations, e.g. `DataSet<String>` for a `String` data set or `MapFunction<String, Integer>` for a mapper from `String` to `Integer`.
 
 ```java
+
+// using a basic data type
+DataSet<String> numbers = env.fromElements("1", "2");
+
+numbers.map(new MapFunction<String, Integer>() {
+    @Override
+    public String map(String value) throws Exception {
+        return Integer.parseInt(value);
+    }
+});
+
+// using a custom class
 DataSet<WordCount> wordCounts = env.fromElements(
     new WordCount("hello", 1),
     new WordCount("world", 2));
@@ -324,9 +301,8 @@ wordCounts.map(new MapFunction<WordCount, Integer>() {
 ```
 
 When working with operators that require a Key for grouping or matching records
-you need to implement a `KeySelector` for your custom type. This is different
-from tuples where you can simply specify grouping fields by indices. (see
-[Section Data Transformations](#transformations))
+you need to implement a `KeySelector` for your custom type (see
+[Section Data Transformations](#transformations)).
 
 ```java
 wordCounts.groupBy(new KeySelector<WordCount, String>() {
@@ -336,19 +312,59 @@ wordCounts.groupBy(new KeySelector<WordCount, String>() {
 }).reduce(new MyReduceFunction());
 ```
 
+#### Tuples
+
+You can use the `Tuple` classes for composite types. Tuples contain a fix number of fields of various types. The Java API provides classes from `Tuple1` up to `Tuple25`. Every field of a tuple can be an arbitrary Stratosphere type - including further tuples, resulting in nested tuples. Fields of a Tuple can be accessed directly using the fields `tuple.f4`, or using the generic getter method `tuple.getField(int position)`. The field numbering starts with 0. Note that this stands in contrast to the Scala tuples, but it is more consistent with Java's general indexing.
+
+```java
+DataSet<Tuple2<String, Integer>> wordCounts = env.fromElements(
+    new Tuple2<String, Integer>("hello", 1),
+    new Tuple2<String, Integer>("world", 2));
+
+wordCounts.map(new MapFunction<Tuple2<String, Integer>, Integer>() {
+    @Override
+    public String map(Tuple2<String, Integer> value) throws Exception {
+        return value.f1;
+    }
+});
+```
+
+When working with operators that require a Key for grouping or matching records,
+Tuples let you simply specify the positions of the fields to be used as key. You can specify more
+than one position to use composite keys (see [Section Data Transformations](#transformations)).
+
+```java
+wordCounts
+    .groupBy(0)
+    .reduce(new MyReduceFunction());
+```
+
+In order to access fields more intuitively and to generate more readable code, it is also possible to extend a subclass of `Tuple`. You can add getters and setters with custom names that delegate to the field positions. See this [example](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/relational/TPCHQuery3.java) for an illustration how to make use of that mechanism.
+
+
 #### Values
 
-Stratosphere also provides the `Value` interface with two methods: `read` and `write`. Using this you can implement a
-data type with custom serialization and deserialization code.
+*Value* types describe their serialization and deserialization manually. Instead of going through a general purpose serialization framework, they provide custom code for those operations by means implementing the `eu.stratosphere.types.Value` interface with the methods `read` and `write`. Using a *Value* type is reasonable when general purpose serialization would be highly inefficient. An example would be a data type that implements a sparse vector of elements as an array. Knowing that the array is mostly zero, one can use a special encoding for the non-zero elements, while the general purpose serialization would simply write all array elements.
 
-Stratosphere also provides serializable wrapper types around Java basic types and Collections implementing the Java `List` or `Map` interfaces:
+The `eu.stratosphere.types.CopyableValue` interface supports manual internal cloning logic in a similar way.
 
-- `ShortValue`, `IntValue`, `LongValue`
-- `FloatValue`, `DoubleValue`
-- `ByteValue`, `BooleanValue`
-- `CharValue`, `StringValue`
-- `ListValue`, `MapValue`
+Stratosphere comes with pre-defined Value types that correspond to Java's basic data types. (`ByteValue`, `ShortValue`, `IntValue`, `LongValue`, `FloatValue`, `DoubleValue`, `StringValue`, `CharValue`, `BooleanValue`). These Value types act as mutable variants of the basic data types: Their value can be altered, allowing programmers to reuse objects and take pressure off the garbage collector. 
 
+
+#### Hadoop Writables
+
+You can use types that implement the `org.apache.hadoop.Writable` interface. The serialization logic defined in the `write()`and `readFields()` methods will be used for serialization.
+
+
+#### Type Erasure & Type Inferrence
+
+The Java compiler throws away much of the generic type information after the compilation. This is known as *type erasure* in Java. It means that at runtime, an instance of an object does not know its generic type any more. For example, instances of `DataSet<String>` and `DataSet<Long>` look the same to the JVM.
+
+Stratosphere requires type information at the time when it prepares the program for execution (when the main method of the program is called). The Stratosphere Java API tries to reconstruct the type information that was thrown away in various ways and store it explicitly in the data sets and operators. You can retrieve the type via `DataSet.getType()`. The method returns an instance of `TypeInformation`, which is Stratosphere's internal way of representing types.
+
+The type inference has its limits and needs the "cooperation" of the programmer in some cases. Examples for that are methods that create data sets from collections, such as `ExecutionEnvironment.fromCollection(),` where you can pass an argument that describes the type. But also generic functions like `MapFunction<I, O>` may need extra type information.
+
+The [ResultTypeQueryable](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-java/src/main/java/eu/stratosphere/api/java/typeutils/ResultTypeQueryable.java) interface can be implemented by input formats and functions to tell the API explicitly about their return type. The *input types* that the functions are invoked with can usually be inferred by the result types of the previous operations.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
