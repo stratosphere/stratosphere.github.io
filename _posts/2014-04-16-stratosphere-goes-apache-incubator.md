@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  'Stratosphere accepted as Apache Incubator Project'
-date:   2014-04-16 23:00:00
+date:   2014-04-16 10:00:00
 categories: blog apache
 ---
 
