@@ -13,7 +13,7 @@ toc:
   - {anchor: "data_sinks", title: "Data Sinks"}
   - {anchor: "debugging", title: "Debugging"}
   - {anchor: "iterations", title: "Iteration Operators"}
-  - {anchor: "annotations", title: "Annotations"}
+  - {anchor: "annotations", title: "Semantic Annotations"}
   - {anchor: "broadcast_variables", title: "Broadcast Variables"}
   - {anchor: "packaging", title: "Program Packaging"}
   - {anchor: "accumulators_counters", title: "Accumulators &amp; Counters"}
@@ -1019,71 +1019,48 @@ DataSet<Tuple2<String, Integer>> unioned = vals1.union(vals2)
 Data Sources
 ------------
 
-DataSets are created by Data Sources. Basically, a data source generates a sequence of data items which can be processed by subsequent transformations. The data which is turned into data items by a data source can originate from any external sources. It can be read from a file, queried from a database or key-value store, or even be generated on the fly.
+Data sources create the initial data sets, such as from files or from Java collections. The general mechanism of of creating data sets is abstracted behind an [InputFormat](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-core/src/main/java/eu/stratosphere/api/common/io/InputFormat.java). Stratosphere comes with several built-in formats to create data sets from common file formats. Many of them have shortcut methods on the *ExecutionEnvironment*.
 
-In the following we show how to create DataSets using some common data sources as well as generic InputFormats.
+File-based:
+- `readTextFile(path)` / `TextInputFormat` - Reads files line wise and returns them as Strings.
+- `readTextFileWithValue(path)` / `TextValueInputFormat` - Reads files line wise and returns them as StringValues. StringValues are mutable strings.
+- `readCsvFile(path)` / `CsvInputFormat` - Parses files of comma (or another char) delimited fields. Returns a DataSet of tuples. Supports the basic java types and their Value counterparts as field types.
 
-### Read Data from text files
+Collection-based:
+- `fromCollection(Collection)` - Creates a data set from the Java Java.util.Collection. All elements in the collection must be of teh same type.
+- `fromCollection(Iterator, Class)` - Creates a data set from an iterator. The class specifies the data type of the elements returned by the iterator.
+- `fromElements(T ...)` - Creates a data set from the given sequence of objects. All objects must be of the same type.
+- `fromParallelCollection(SplittableIterator, Class)` - Creates a data set from an iterator, in parallel. The class specifies the data type of the elements returned by the iterator.
+- `generateSequence(from, to)` - Generates the squence of numbers in the given interval, in parallel.
 
-The following examples show some common ways to read text files:
 
+Generic:
+- `createInput(path)` / `InputFormat` - Accepts a generic input format.
+
+**Examples**
 ```java
-final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-// read text file from local files system
-DataSet<String> localLines = env.readTextFile("file:///path/to/my/textfile");
+ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-// read text file from a HDFS running at nnHost:nnPort
-DataSet<String> hdfsLines = env.readTextFile("hdfs://nnHost:nnPort/path/to/my/textfile");
+// read a text file line wise
+DataSet<String> textInput = env.readTextFile("hdfs:///the/input/text/file");
 
-// read 1st (int), 3rd (double), and 6th (String) fields of a CSV file
-DataSet<Tuple3<Integer, Double, String>> csvData = 
-    env.readCsvFile("file:///path/to/my/csvfile")
-    // set field and line delimiters
-    .fieldDelimiter('|').lineDelimiter("\n")
-    // select fields to include
-    .includeFields("10100100")
-    // give types of fields
-    .types(Integer.class, Double.class, String.class);
+// read a CSV file with three fields
+DataSet<Tuple3<Integer, String, Double>> csvInput = env.readCsvFile("hdfs:///the/CSV/file")
+	                       .types(Integer.class, String.class, Double.class);
+
+// read a CSV file with five fields, taking only two of them
+DataSet<Tuple2<String, Double>> csvInput = env.readCsvFile("hdfs:///the/CSV/file")
+                               .includeFields("10010")  // take the first and the fourth fild
+	                       .types(String.class, Double.class);
+
+
+// create a set from some given elements
+DataSet<String> value = env.fromElements("Foo", "bar", foobar", "fubar");
+
+// generate a number sequence
+DataSet<Long> numbers = env.generateSequence(1, 10000000);
 ```
-
-### Read Data using generic InputFormats
-
-Stratosphere uses the abstraction of InputFormats to read data from any data store (very similar to Hadoop MR). An InputFormat defines how a data source can be divided into individual splits which can be read in parallel, how to read the data of a source, and finally how to generate data items from it. This is a very generic way of handling input data. You can implement your own InputFormat to read any data and generate data items from it. Stratosphere provides a couple of abstract base classes to ease the implementation of custom file-based InputFormats.
-
-The following examples show how to create DataSets using some InputFormats which are provided by Stratosphere:
-
-```java
-final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
-
-// Read text lines using a TextInputFormat
-DataSet<String> textLines = 
-    env.createInput(
-      // create and configure input format
-      new TextInputFormat(new Path("file:///path/to/my/textfile")), 
-      // specify type information for DataSet
-      BasicTypeInfo.STRING_TYPE_INFO
-    );
-
-// Read data from a relational database using the JDBC input format
-DataSet<Tuple2<String, Integer> dbData = 
-    env.createInput(
-      // create and configure input format
-      JDBCInputFormat.buildJDBCInputFormat()
-                     .setDrivername("org.apache.derby.jdbc.EmbeddedDriver")
-                     .setDBUrl("jdbc:derby:memory:persons")
-                     .setQuery("select name, age from persons")
-                     .finish(),
-      // specify type information for DataSet
-      new TupleTypeInfo(Tuple2.class, STRING_TYPE_INFO, INT_TYPE_INFO)
-    );
-
-```
-**Note:** Stratosphere's program compiler needs to infer the data types of the data items which are returned by an InputFormat. If this information cannot be automatically inferred, it is necessary to manually provide the type information as shown in the examples above.
-
-### Read Data from Java Collections
-
-Stratosphere also provides a data source to read from Java collections. This feature is especially beneficial when developing and debugging data analysis programs. Please find details about collection data sources in the [Debugging](#debugging) section.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -1092,62 +1069,64 @@ Stratosphere also provides a data source to read from Java collections. This fea
 Data Sinks
 ----------
 
-Data Sinks are used to emit DataSets which are produced by a Stratosphere program. Stratosphere provides different build-in DataSinks but also supports the generic abstraction of OutputFormats (very similar to Hadoop MR). Implement your own OutputFormat to write the result of a Stratosphere program in any format to any location you like.
+Data sinks consume DataSets and are used to store or return them. Data sink operations are described using an [OutputFormat](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-core/src/main/java/eu/stratosphere/api/common/io/OutputFormat.java). Stratosphere comes with a variety of built-in output formats that
+are encapsulated behind operations on the DataSet type:
 
-In the following we show some examples how to emit data from a Stratosphere program.
+- `writeAsText()` / `TextOuputFormat` - Writes for each element as a String in a line. The String are obtained by calling the *toString()* method.
+- `writeAsCsv` / `CsvOutputFormat` - Writes tuples as comma-separated value files. Row and field delimiters are configurable. The value for each field comes from the *toString()* method of the objects.
+- `print()` / `printToErr()` - Prints the *toString()* value of each element on the standard out / strandard error stream.
+- `write()` / `FileOutputFormat` - Method and base class for custom file outputs. Supports custom object-to-bytes conversion.
+- `output()`/ `OutputFormat` - Most generic output method, for data sinks that are not file based (such as storing the result in a database).
 
-### Print DataSet to Standard-Out
+A DataSet can be input to multiple operations. Programs can write or print a data set and at the same time run additional transformations on them.
 
-```java
-DataSet<Tuple3<String, Integer, Double>> myResult = [...]
+**Examples**
 
-// write DataSet to std-out using the toString() method of the data type
-myResult.print();
-
-// write DataSet to std-err using the toString() method of the data type
-myResult.printToErr();
-```
-
-### Write DataSet to a text file
+Standard data sink methods:
 
 ```java
-DataSet<Tuple3<String, Integer, Double>> myResult = [...]
-
-// write DataSet to a file on the local file system
-myResult.writeAsText("file:///my/result/on/localFS");
-
-// write DataSet to a file on a HDFS with a namenode running at nnHost:nnPort
-myResult.writeAsText("hdfs://nnHost:nnPort/my/result/on/localFS");
-
-// write DataSet to a file and overwrite the file if it exists
-myResult.writeAsText("file:///my/result/on/localFS", WriteMode.OVERWRITE);
-
-// write DataSet to a CSV file with new-line ('\n') as record and blank (' ') as field separators
-myResult.writeAsCsv("file:///my/result/on/localFS", "\n", " ");
-```
-**NOTE:** Only Tuple DataSets can be written to CSV files.
+// text data 
+DataSet<String> textData = // [...]
+values.writeAsText("file:///path/to/the/result/file");
 
 
-### Write DataSet using a generic OutputFormat
-
-```
-DataSet<Tuple3<String, Integer, Double>> myResult = [...]
-
-// write Tuple DataSet to a relational database
-myResult.output(
-    // build and configure OutputFormat
-    JDBCOutputFormat.buildJDBCOutputFormat()
-                    .setDrivername("org.apache.derby.jdbc.EmbeddedDriver")
-                    .setDBUrl("jdbc:derby:memory:persons")
-                    .setQuery("insert into persons (name, age, height) values (?,?,?)")
-                    .finish()
-    );
-
+// tuples as lines with pipe as the separator
+DataSet<Tuple3<String, Integer, Double>> values = // [...]
+values.writeAsCsv("file:///path/to/the/result/file", "\n", "|");
 ```
 
-### Insert DataSet into Java Collection
+Using a custom output format:
 
-Stratosphere also provides a data sink to insert data to a Java collection. This feature is especially beneficial for developing, debugging, and testing of data analysis programs. Please find details about collection data sinks in the following [Debugging](#debugging) section.
+```java
+DataSet<MyType> data = // [...]
+
+data.output(new MyOutputFormat());
+
+// custom output format
+public class MyOutputFormat implements OutputFormat<MyType> {
+
+  private transient DataStoreConnection conn; // transient because it should not be
+                                              // serialized when shipping the code
+
+  @Override
+  public void configure(Configuration parameters) {}
+
+  @Override
+  public void open(int taskNumber, int numTasks) {
+    conn = new DataStoreConnection(...);
+  }
+
+  @Override
+  public void writeRecord(MyType record) {
+    conn.putRecord(record);
+  }
+
+  @Override
+  public void close() {
+    conn.close();
+  }
+}
+```
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -1321,49 +1300,40 @@ iteration.closeWith(oldRankComparison, updateRanks).writeAsCsv(outputPath);
 </section>
 
 <section id="annotations">
-Annotations
+Semantic Annotations
 -----------
 
-Annotations allow the user to specify constant fields between input and output data of a user defined operator. The user can give these semantic hints by annotating the operator classes. A field is considered constant if its value is not modified and its position remains the same.
+Semantic Annotations give hints about the behavior of a function by telling the system which fields in the input are accessed and which are constant between input and output data of a function (copied but not modified). Semantic annotations are a powerful means to speed up execution, because they allow the system to reason about reusing sort orders or partitions across multiple operations. Using semantic annotations may eventually save the program from unnecessary data shuffling or unnecessary sorts.
 
-Currently, the usage of annotations is only possible with operators working on the `Tuple` classes as input and output types. Custom object support will be added in the future.
+Semantic annotations can be attached to functions through Java annotations, or passed as arguments when invoking a function on a DataSet. The following example illustrates that:
 
-The following annotations are available:
-
-* `@ConstantFields`: constant fields of a single input operator (like map).
-
-* `@ConstantFieldsFirst`: constant fields for the first input of a two input operator (like join).
-
-* `@ConstantFieldsSecond`: constant fields for the second input of a two input operator (like join).
-
-* `@AllFieldsConstant`: all fields remain constant, no field is modified.
-
-* `@ConstantFieldsExcept`: all fields of a single input operator except the given ones are constant.
-
-* `@ConstantFieldsFirstExcept`: all fields of the first input of a two input operator except the given ones are constant.
-
-* `@ConstantFieldsSecondExcept`: all fields of the second input of a two input operator except the given ones are constant.
-
-**Note**: It is important to be strict when providing annotations. Only annotate fields, when you are certain that they are constant. If the behaviour of the operator is not clearly predictable, no annotation should be provided.
-
-**Example**
-
-The following example shows a simple map operator, which works on `Tuple2` types. It calculates the square of the first field. Since only field one is ever modified, all other fields are considered constant.
-
-{% highlight java %}
-@ConstantFields(fields={0})
-public static final class Square extends
-    FlatMapFunction<Tuple2<String, Integer>, Tuple2<String, Integer>> {
-
-    @Override
-    public void flatMap(Tuple2<String, Integer> value, Collector<Tuple2<String, Integer>> out) {
-        Integer i = value.getField(1);
-        value.setField(i*i, 1);
-
-        out.collect(value);
-    }
+```java
+@ConstantFields("1")
+public class DivideFirstbyTwo extends MapFunction<Tuple2<Integer, Integer>, Tuple2<Integer, Integer>> {
+  @Override
+  public Tuple2<Integer, Integer> map(Tuple2<Integer, Integer> value) {
+    value.f0 /= 2;
+    return value;
+  }
 }
-{% endhighlight %}
+
+The following annotations are currently available:
+
+* `@ConstantFields`: Declares constant fields (forwarded/copied) for functions with a single input data set (Map, Reduce, Filter, ...).
+
+* `@ConstantFieldsFirst`: Declares constant fields (forwarded/copied) for functions with a two input data sets (Join, CoGroup, ...), with respect to the first input data set.
+
+* `@ConstantFieldsSecond`: Declares constant fields (forwarded/copied) for functions with a two input data sets (Join, CoGroup, ...), with respect to the first second data set.
+
+* `@ConstantFieldsExcept`: Declares that all fields are constant, except for the specified fields. Applicable to functions with a single input data set.
+
+* `@ConstantFieldsFirstExcept`: Declares that all fields of the first input are constant, except for the specified fields. Applicable to functions with a two input data sets.
+
+* `@ConstantFieldsSecondExcept`: Declares that all fields of the second input are constant, except for the specified fields. Applicable to functions with a two input data sets.
+
+*(Note: The system currently evaluated annotations only on Tuple data types. This will be extended in the next versions)*
+
+**Note**: It is important to be conservative when providing annotations. Only annotate fields, when they are always constant for every call to the function. Otherwise the system has incorrect assumptions about the execution and the execution may produce wrong results. If the behavior of the operator is not clearly predictable, no annotation should be provided.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -1372,7 +1342,8 @@ public static final class Square extends
 Broadcast Variables
 -------------------
 
-You can easily broadcast a data set `DataSet<T>` to all nodes executing a specific operator. The data set will then be accessible at the operator as an `Collection<T>`.
+Broadcast variables allow you to make a data set available to all parallel instances of an operation, in addition to the regular input of the operation. This is useful
+for auxiliary data sets, or data-dependent parameterization. The data set will then be accessible at the operator as an `Collection<T>`.
 
 - **Broadcast**: broadcast sets are registered by name via `withBroadcastSet(DataSet, String)`, and
 - **Access**: accessible via `getRuntimeContext().getBroadcastVariable(String)` at the target operator.
@@ -1400,7 +1371,7 @@ data.map(new MapFunction<String, String>() {
 
 Make sure that the names (`broadcastSetName` in the previous example) match when registering and accessing broadcasted data sets. For a complete example program, have a look at [BroadcastVariableExample](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/broadcastvar/BroadcastVariableExample).
 
-**Note**: As the content of broadcast variables is kept in-memory on each node, it should not become too large. For simpler things like scalar values you should use `withParameters(...)`.
+**Note**: As the content of broadcast variables is kept in-memory on each node, it should not become too large. For simpler things like scalar values you can simply make parameters part of the closure of a function, or use the `withParameters(...)` method to pass in a configuration.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
