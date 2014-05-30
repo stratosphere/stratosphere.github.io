@@ -24,9 +24,8 @@ WordCount is the "Hello World" of Big Data processing systems. It computes the f
 
 <div id="wordcount-java-code">
 {% highlight java %}
-
 // get input data
-DataSet<String> text = getTextDataSet(env);
+DataSet<String> text = environment.readTextFile("hdfs://path/to/text/file");
 
 DataSet<Tuple2<String, Integer>> counts = 
         // split up the lines in pairs (2-tuples) containing: (word,1)
@@ -35,7 +34,7 @@ DataSet<Tuple2<String, Integer>> counts =
         .groupBy(0)
         .aggregate(Aggregations.SUM, 1);
 
-counts.writeAsCsv(outputPath, "\n", " ");
+counts.writeAsCsv(outputPath);
 
 // User-defined functions
 public static final class Tokenizer extends FlatMapFunction<String, Tuple2<String, Integer>> {
@@ -47,9 +46,7 @@ public static final class Tokenizer extends FlatMapFunction<String, Tuple2<Strin
         
         // emit the pairs
         for (String token : tokens) {
-            if (token.length() > 0) {
-                out.collect(new Tuple2<String, Integer>(token, 1));
-            }   
+            out.collect(new Tuple2<String, Integer>(token, 1));
         }
     }
 }
@@ -73,9 +70,13 @@ In this simple example, PageRank is implemented with a <a href="{{site.baseurl}}
 
 <div id="pagerank-java-code">
 {% highlight java %}
-// get input data
-DataSet<Tuple2<Long, Double>> pagesWithRanks = getPagesWithRanksDataSet(env);
-DataSet<Tuple2<Long, Long[]>> pageLinkLists = getLinksDataSet(env);
+// parse pages file as a "Long, Double" CSV file (id, rank)
+DataSet<Tuple2<Long, Double>> pagesWithRanks = env.readCsvFile("hdfs://path/to/pages")
+                                                  .types(Long.class, Double.class);
+
+// parse edges file as a "Long, Long" CSV file (source id, target id)
+DataSet<Tuple2<Long, Long[]>> pageLinkLists = .readCsvFile("hdfs://path/to/links")
+                                              .types(Long.class, Long.class);
 
 // set iterative data set
 IterativeDataSet<Tuple2<Long, Double>> iteration = pagesWithRanks.iterate(maxIterations);
@@ -90,11 +91,11 @@ DataSet<Tuple2<Long, Double>> newRanks = iteration
 
 DataSet<Tuple2<Long, Double>> finalPageRanks = iteration.closeWith(
         newRanks, 
+        // termination condition (join old and new ranks and filter those that changed)
         newRanks.join(iteration).where(0).equalTo(0)
-        // termination condition
         .filter(new EpsilonFilter()));
 
-finalPageRanks.writeAsCsv(outputPath, "\n", " ");
+finalPageRanks.writeAsCsv(outputPath);
 
 // User-defined functions
 
@@ -138,7 +139,6 @@ public static final class EpsilonFilter
         return Math.abs(value.f0.f1 - value.f1.f1) > EPSILON;
     }
 }
-
 {% endhighlight %}
 
 </div>
@@ -170,10 +170,14 @@ This implementation uses a <a href="{{site.baseurl}}/docs/{{site.current_stable}
 <div id="cc-java-code">
 
 {% highlight java %}
+// generate vertex data as a sequence of numbers
+DataSet<Long> vertices = env.generateSequence(1, NUM_VERTICES);
 
-// read vertex and edge data
-DataSet<Long> vertices = getVertexDataSet(env);
-DataSet<Tuple2<Long, Long>> edges = getEdgeDataSet(env).flatMap(new UndirectEdge());
+// parse edges file as a "Long, Long" CSV file (source id, target id)
+// and make the edges undirected
+DataSet<Tuple2<Long, Long>> edges = env.readCsvFile("hdfs://path/to/edges")
+                                       .types(Long.class, Long.class)
+                                       .flatMap(new UndirectEdge());
 
 // assign the initial component IDs (equal to the vertex ID)
 DataSet<Tuple2<Long, Long>> verticesWithInitialId = vertices.map(new DuplicateValue<Long>());
@@ -196,7 +200,7 @@ DataSet<Tuple2<Long, Long>> changes = iteration.getWorkset()
 DataSet<Tuple2<Long, Long>> result = iteration.closeWith(changes, changes);
 
 // emit result
-result.writeAsCsv(outputPath, "\n", " ");
+result.writeAsCsv(outputPath);
 
 // User-defined functions
 
@@ -210,14 +214,11 @@ public static final class DuplicateValue<T> extends MapFunction<T, Tuple2<T, T>>
 
 public static final class UndirectEdge 
                     extends FlatMapFunction<Tuple2<Long, Long>, Tuple2<Long, Long>> {
-    Tuple2<Long, Long> invertedEdge = new Tuple2<Long, Long>();
-    
+
     @Override
     public void flatMap(Tuple2<Long, Long> edge, Collector<Tuple2<Long, Long>> out) {
-        invertedEdge.f0 = edge.f1;
-        invertedEdge.f1 = edge.f0;
-        out.collect(edge);
-        out.collect(invertedEdge);
+        out.collect(edge); // original edge
+        out.collect(new Tuple2<Long, Long>(edge.f1, edge.f0)); // swapped edge
     }
 }
 
