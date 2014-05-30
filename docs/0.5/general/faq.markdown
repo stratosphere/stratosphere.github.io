@@ -14,7 +14,6 @@ questions:
   - {anchor: "errors_hdfs", title: "My job fails early with a java.io.EOFException. What could be the cause?"}
   - {anchor: "errors_keys", title: "My program does not compute the correct result. Why are my custom key types are not grouped/joined correctly?"}
   - {anchor: "errors_instantiation", title: "I get a <em>java.lang.InstantiationException</em> for my data type, what is wrong?"}
-  - {anchor: "errors_visualization", title: "I get a <em>java.lang.UnsatisfiedLinkError</em> when starting the runtime visualization. How can I fix that?"}
   - {anchor: "errors_stop_stratosphere", title: "I can't stop Stratosphere with the provided stop-scripts. What can I do?"}
   - {anchor: "errors_out_of_memory", title: "I got an <em>OutOfMemoryException</em>. What can I do?"}
   - {anchor: "errors_huge_tm_log", title: "Why do the TaskManager log files become so huge?"}
@@ -68,14 +67,14 @@ There are a multiple of ways to track the progress of a Stratosphere program:
 
 -   The JobManager (the master of the distributed system) starts a web interface to observe program execution. In runs on port 8081 by default (configured in `conf/stratosphere-config.yml`).
 -   When you start a program from the command line, it will print the status changes of all operators as the program progresses through the operations.
--   The `swt-visualization` tool reports the states of all subtasks. If *profiling* is enabled (see [Configuration Reference](http://stratosphere.eu/docs/0.4/setup/config.html "Configuration Reference")), the load of all machines is displayed as well.
 -   All status changes are also logged to the JobManager's log file.
 </section>
 
 <section id="usage_crash">
 ### How can I figure out why a program failed?
 
--   If you run the program from the command-line in blocking mode (with *wait* flag `--wait` or `-w`), task exceptions are printed to the standard error stream and shown on the console.
+-   Thw JobManager web frontend (by default on port 8081) displays the exceptions of failed tasks.
+-   If you run the program from the command-line, task exceptions are printed to the standard error stream and shown on the console.
 -   Both the command line and the web interface allow you to figure out which parallel task first failed and caused the other tasks to cancel the execution.
 -   Failing tasks and the corresponding exceptions are reported in the log files of the master and the worker where the exception occurred (`log/stratosphere-<user>-jobmanager-<host>.log` and `log/stratosphere-<user>-taskmanager-<host>.log`).
 </section>
@@ -137,27 +136,6 @@ Keys must correctly implement the methods `java.lang.Object#hashCode()`, `java.l
 All data type classes must be public and have a public nullary constructor (constructor with no arguments).
 Further more, the classes must not be abstract or interfaces.
 If the classes are internal classes, they must be public and static.
-</section>
-
-<section id="errors_visualization">
-### I get a <em>java.lang.UnsatisfiedLinkError</em> when starting the swt-visualization. How can I fix this?
-
-The swt-visualization is, as the name suggests, a SWT application. It requires the appropriate native library for the SWT (Standard Widget
-Toolkit) gui library. That library must be specific to your platform. The one that is packaged with Stratosphere by default is for 64bit Linux GTK systems.
-If you have a different operating system, architecture, or graphics library, you need a different SWT version.
-
-To fix the problem, update the maven dependency in
-[stratosphere-addons/swt-visualization/pom.xml](https://github.com/stratosphere/stratosphere/blob/master/stratosphere-addons/swt-visualization/pom.xml "https://github.com/stratosphere/stratosphere/blob/master/stratosphere-addons/swt-visualization/pom.xml")
-to refer to your platform specific library. The relevant dependency entry is 
-{% highlight xml %}
-<dependency>
-    <groupId>org.eclipse.swt.gtk.linux</groupId>
-    <artifactId>x86_64</artifactId>
-    <version>3.3.0-v3346</version>
-</dependency>
-{% endhighlight %}
-You can find a the list of available library versions under
-[http://repo1.maven.org/maven2/org/eclipse/swt/](http://repo1.maven.org/maven2/org/eclipse/swt/ "http://repo1.maven.org/maven2/org/eclipse/swt/").
 </section>
 
 <section id="errors_stop_stratosphere">
@@ -295,15 +273,17 @@ Stratosphere creates a `.stratosphere/` directory in the users home directory wh
 <section id="features_fault_tolerance">
 ### What kind of fault-tolerance does Stratosphere provide?
 
-Fault tolerance will go into the open source project in the next versions.
+Stratospere can restart failed jobs. Mid-query fault tolerance will go into the open source project in the next versions.
 </section>
 
 <section id="features_hadoop">
 ### Are Hadoop-like utilities, such as Counters and the DistributedCache supported?
 
-[Stratosphere's Accumulators]({{site.baseurl}}/docs/0.4/programming_guides/java.html#accumulators) work very similar like Hadoop's counters, but are more powerful.
+[Stratosphere's Accumulators]({{site.baseurl}}/docs/0.5/programming_guides/java.html#accumulators) work very similar like Hadoop's counters, but are more powerful.
 
-Support for a distributed cache will be added in release 0.5. In many cases, operators like [cross]({{site.baseurl/docs/0.4/programming_guides/pmodel.html#operators}}) and broadcast variables handle these situations more efficiently.
+Stratosphere has a [Distributed Cache](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-core/src/main/java/eu/stratosphere/api/common/cache/DistributedCache.java) that is deeply integrated with the APIs. Please refer to the [JavaDocs](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-java/src/main/java/eu/stratosphere/api/java/ExecutionEnvironment.java#L561) for details on how to use it.
+
+In order to make data sets available on all tasks, we encourage you to use [Broadcast Variables]({{site.baseurl}}/docs/0.5/programming_guides/java.html#broadcast_variables) instead. They are more efficient and easier to use than the distributed cache.
 </section>
 
 </section>
