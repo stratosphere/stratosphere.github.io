@@ -1058,7 +1058,7 @@ DataSet<Tuple2<String, Double>> csvInput = env.readCsvFile("hdfs:///the/CSV/file
 	                       .types(String.class, Double.class);
 
 // create a set from some given elements
-DataSet<String> value = env.fromElements("Foo", "bar", foobar", "fubar");
+DataSet<String> value = env.fromElements("Foo", "bar", "foobar", "fubar");
 
 // generate a number sequence
 DataSet<Long> numbers = env.generateSequence(1, 10000000);
