@@ -819,7 +819,7 @@ DataSet<Tuple2<String, Double>>
                    .with(new PointWeighter());
 ```
 
-#### Join with Projection (**NOT SUPPORTED YET**)
+#### Join with Projection
 
 A Join transformation can construct result tuples using a projection as shown here:
 
@@ -905,7 +905,7 @@ DataSet<Tuple3<Integer, Integer, Double>>
                    .with(new EuclideanDistComputer());
 ```
 
-#### Cross with Projection (**NOT SUPPORTED YET**)
+#### Cross with Projection
 
 A Cross transformation can also construct result tuples using a projection as shown here:
 
@@ -1022,23 +1022,26 @@ Data Sources
 Data sources create the initial data sets, such as from files or from Java collections. The general mechanism of of creating data sets is abstracted behind an [InputFormat](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-core/src/main/java/eu/stratosphere/api/common/io/InputFormat.java). Stratosphere comes with several built-in formats to create data sets from common file formats. Many of them have shortcut methods on the *ExecutionEnvironment*.
 
 File-based:
+
 - `readTextFile(path)` / `TextInputFormat` - Reads files line wise and returns them as Strings.
 - `readTextFileWithValue(path)` / `TextValueInputFormat` - Reads files line wise and returns them as StringValues. StringValues are mutable strings.
 - `readCsvFile(path)` / `CsvInputFormat` - Parses files of comma (or another char) delimited fields. Returns a DataSet of tuples. Supports the basic java types and their Value counterparts as field types.
 
 Collection-based:
-- `fromCollection(Collection)` - Creates a data set from the Java Java.util.Collection. All elements in the collection must be of teh same type.
+
+- `fromCollection(Collection)` - Creates a data set from the Java Java.util.Collection. All elements in the collection must be of the same type.
 - `fromCollection(Iterator, Class)` - Creates a data set from an iterator. The class specifies the data type of the elements returned by the iterator.
 - `fromElements(T ...)` - Creates a data set from the given sequence of objects. All objects must be of the same type.
 - `fromParallelCollection(SplittableIterator, Class)` - Creates a data set from an iterator, in parallel. The class specifies the data type of the elements returned by the iterator.
 - `generateSequence(from, to)` - Generates the squence of numbers in the given interval, in parallel.
 
 Generic:
+
 - `createInput(path)` / `InputFormat` - Accepts a generic input format.
 
 **Examples**
-```java
 
+```java
 ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
 // read text file from local files system
@@ -1103,16 +1106,15 @@ Standard data sink methods:
 ```java
 // text data 
 DataSet<String> textData = // [...]
-values.writeAsText("file:///path/to/the/result/file");
 
 // write DataSet to a file on the local file system
-myResult.writeAsText("file:///my/result/on/localFS");
+textData.writeAsText("file:///my/result/on/localFS");
 
 // write DataSet to a file on a HDFS with a namenode running at nnHost:nnPort
-myResult.writeAsText("hdfs://nnHost:nnPort/my/result/on/localFS");
+textData.writeAsText("hdfs://nnHost:nnPort/my/result/on/localFS");
 
 // write DataSet to a file and overwrite the file if it exists
-myResult.writeAsText("file:///my/result/on/localFS", WriteMode.OVERWRITE);
+textData.writeAsText("file:///my/result/on/localFS", WriteMode.OVERWRITE);
 
 // tuples as lines with pipe as the separator "a|b|c"
 DataSet<Tuple3<String, Integer, Double>> values = // [...]
@@ -1261,50 +1263,42 @@ You can also check out the [K-Means example](https://github.com/stratosphere/str
 
 Delta iterations exploit the fact that certain algorithms do not change every data point of the solution in each iteration.
 
-In addition to the partial solution that is fed back (called workset) in every iteration, delta iterations maintain state across iterations (called solution set), which can be updated through deltas. The result of the iterative computation is the state after the last iteration. Please refer to the [Introduction to Iterations]({{site.baseurl}}/docs/0.5/programming_guides/iterations.html) for an introduction to the basic principle of delta iterations.
+In addition to the partial solution that is fed back (called workset) in every iteration, delta iterations maintain state across iterations (called solution set), which can be updated through deltas. The result of the iterative computation is the state after the last iteration. Please refer to the [Introduction to Iterations]({{site.baseurl}}/docs/0.5/programming_guides/iterations.html) for an overview of the basic principle of delta iterations.
 
 Defining a DeltaIteration is similar to defining a BulkIteration. For delta iterations, two data sets form the input to each iteration (workset and solution set), and two data sets are produced as the result (new workset, solution set delta) in each iteration.
 
-To create a DeltaIteration call the `iterateDelta(DataSet, int, int)` (or `iterateDelta(DataSet, int, int[])` respectively). This method is called on the initial solution set. The arguments are the initial delta set, the maximum number of iterations and the key positions. The returned `DeltaIterativeDataSet` can be used for operators inside the iteration and represents the work set. You can access the solution set by joining with the returned DataSet from `iteration.getSolutionSet()`.
+To create a DeltaIteration call the `iterateDelta(DataSet, int, int)` (or `iterateDelta(DataSet, int, int[])` respectively). This method is called on the initial solution set. The arguments are the initial delta set, the maximum number of iterations and the key positions. The returned `DeltaIteration` object gives you access to the DataSets representing the workset and solution set via the methods `iteration.getWorket()` and `iteration.getSolutionSet()`.
 
-{% highlight java %}
-DataSet<Tuple2<Long, Double>> initialSolutionSet = env
-    .readCsvFile(solutionSetInputPath)
-    .fieldDelimiter(' ')
-    .types(Long.class, Double.class);
+Below is an example for the syntax of a delta iteration
 
-DataSet<Tuple2<Long, Double>> initialDeltaSet = env
-    .readCsvFile(deltasInputPath)
-    .fieldDelimiter(' ')
-    .types(Long.class, Double.class);
+```java
+// read the initial data sets
+DataSet<Tuple2<Long, Double>> initialSolutionSet = // [...]
 
-DataSet<Tuple3<Long, Long, Long>> dependencySetInput = env
-    .readCsvFile(dependencySetInputPath)
-    .fieldDelimiter(' ')
-    .types(Long.class, Long.class, Long.class);
+DataSet<Tuple2<Long, Double>> initialDeltaSet = // [...]
 
 int maxIterations = 100;
 int keyPosition = 0;
 
-DeltaIterativeDataSet<Tuple2<Long, Double>, Tuple2<Long, Double>> iteration = initialSolutionSet
+DeltaIteration<Tuple2<Long, Double>, Tuple2<Long, Double>> iteration = initialSolutionSet
     .iterateDelta(initialDeltaSet, maxIterations, keyPosition);
 
-DataSet<Tuple2<Long, Double>> updateRanks = iteration
-    .join(dependencySetInput)
-    .where(0)
-    .equalTo(0)
-    .with(new PRDependenciesComputationMatchDelta())
+DataSet<Tuple2<Long, Double>> candidateUpdates = iteration.getWorkset()
     .groupBy(1)
-    .reduceGroup(new UpdateRankReduceDelta());
+    .reduceGroup(new ComputeCandidateChanges());
 
-DataSet<Tuple2<Long, Double>> oldRankComparison = updateRanks
+DataSet<Tuple2<Long, Double>> deltas = candidateUpdates
     .join(iteration.getSolutionSet())
     .where(0)
     .equalTo(0)
-    .with(new RankComparisonMatch());
+    .with(new CompareChangesToCurrent());
 
-iteration.closeWith(oldRankComparison, updateRanks).writeAsCsv(outputPath);
-{% endhighlight %}
+DataSet<Tuple2<Long, Double>> nextWorkset = deltas
+    .filter(new FilterByThreshold());
+
+iteration.closeWith(deltas, nextWorkset)
+	.writeAsCsv(outputPath);
+```
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -1326,6 +1320,7 @@ public class DivideFirstbyTwo extends MapFunction<Tuple2<Integer, Integer>, Tupl
     return value;
   }
 }
+```
 
 The following annotations are currently available:
 
