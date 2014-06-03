@@ -4,66 +4,79 @@ import matplotlib.pyplot as plt
 import csv
 import os
 
-if len(sys.argv) < 3:
-  print "Usage: plotPoints.py <file> <outfileprefix>"
+if len(sys.argv) < 4 or not sys.argv[1] in ['points', 'result']:
+  print "Usage: plot-clusters.py (points|result) <src-file> <pdf-file-prefix>"
   sys.exit(1)
 
-dataFile = sys.argv[1]
-# outDir = sys.argv[2]
-outFilePx = sys.argv[2]
+inFile = sys.argv[1]
+inFile = sys.argv[2]
+outFilePx = sys.argv[3]
 
-plotFileName = os.path.splitext(os.path.basename(dataFile))[0]
-plotFile = os.path.join(".", outFilePx+"-plot")
+inFileName = os.path.splitext(os.path.basename(inFile))[0]
+outFile = os.path.join(".", outFilePx+"-plot.pdf")
 
 ########### READ DATA
 
-ps = []
+cs = []
 xs = []
 ys = []
 
-minP = None
-maxP = None
 minX = None
 maxX = None
 minY = None
 maxY = None
 
-with open(dataFile, 'rb') as file:
-  for line in file:
-    # parse data
-    csvData = line.strip().split('|')
+if sys.argv[1] == 'points':
 
-    p = int(csvData[0])
-    x = float(csvData[1])
-    y = float(csvData[2])
-    
-    if not minP or minP > p:
-      minP = p
-    if not maxP or maxP < p:
-      maxP = p
-    if not minX or minX > x:
-      minX = x
-    if not maxX or maxX < x:
-      maxX = x
-    if not minY or minY > y:
-      minY = y
-    if not maxY or maxY < y:
-      maxY = y
+  with open(inFile, 'rb') as file:
+    for line in file:
+      # parse data
+      csvData = line.strip().split(' ')
 
-    ps.append(p)
-    xs.append(x)
-    ys.append(y)
+      x = float(csvData[0])
+      y = float(csvData[1])
 
-######## PLOT DATA
+      if not minX or minX > x:
+        minX = x
+      if not maxX or maxX < x:
+        maxX = x
+      if not minY or minY > y:
+        minY = y
+      if not maxY or maxY < y:
+        maxY = y
 
-plt.clf()
-plt.scatter(xs, ys, c=ps, s=25, cmap='jet', edgecolors='None', alpha=1.0)
-plt.ylim([minY,maxY])
-plt.xlim([minX,maxX])
+      xs.append(x)
+      ys.append(y)
 
-cb = plt.colorbar()
+    # plot data
+    plt.clf()
+    plt.scatter(xs, ys, s=25, c="#999999", edgecolors='None', alpha=1.0)
+    plt.ylim([minY,maxY])
+    plt.xlim([minX,maxX])
 
-plt.savefig(plotFile+'.pdf', dpi=600)
-print "\nPlotted file: "+plotFile+'.pdf'
+elif sys.argv[1] == 'result':
+
+  with open(inFile, 'rb') as file:
+    for line in file:
+      # parse data
+      csvData = line.strip().split(' ')
+
+      c = int(csvData[0])
+      x = float(csvData[1])
+      y = float(csvData[2])
+
+      cs.append(c)
+      xs.append(x)
+      ys.append(y)
+
+    # plot data
+    plt.clf()
+    plt.scatter(xs, ys, s=25, c=cs, edgecolors='None', alpha=1.0)
+    plt.ylim([minY,maxY])
+    plt.xlim([minX,maxX])
+
+
+plt.savefig(outFile, dpi=600)
+print "\nPlotted file: %s" % outFile
 
 sys.exit(0)

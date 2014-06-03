@@ -22,14 +22,16 @@ links:
   </div>
   <p>Stratosphere contains a data generator for K-Means.</p>
   {% highlight bash %}
-# Download Stratosphere (Development version)
-wget http://stratosphere-bin.s3-website-us-east-1.amazonaws.com/stratosphere-0.5-SNAPSHOT.tgz
-tar xzf stratosphere-0.5-SNAPSHOT.tgz 
+# Download Stratosphere
+wget {{ site.current_stable }}
+tar xzf stratosphere-*.tgz 
 cd stratosphere
 mkdir kmeans
 cd kmeans
 # run data generator
-java -cp ../examples/stratosphere-java-examples-0.5-SNAPSHOT-KMeansIterative.jar eu.stratosphere.example.java.record.kmeans.KMeansSampleDataGenerator 500 10 0.08
+java -cp  ../examples/stratosphere-java-examples-0.5-KMeans.jar eu.stratosphere.example.java.clustering.util.KMeansDataGenerator 500 10 0.08
+cp /tmp/points .
+cp /tmp/centers .
   {% endhighlight %}
 The generator has the following arguments:
 {% highlight bash %}
@@ -42,7 +44,7 @@ The <i>relative standard deviation</i> is an interesting tuning parameter: it de
 <h2>Review Input Data</h2>
 Use the <code>plotPoints.py</code> tool to review the result of the data generator. <a href="{{site.baseurl}}/quickstart/example-data/plotPoints.py">Download Python Script</a>
 {% highlight bash %}
-python2.7 plotPoints.py points input
+python2.7 plotPoints.py points points input
 {% endhighlight %}
 
 
@@ -101,7 +103,7 @@ examples/stratosphere-java-examples-0.5-SNAPSHOT-KMeansIterative.jar
 {% endhighlight %}
 For example:
 {% highlight bash %}
-1 file:///home/robert/stratosphere-0.5-SNAPSHOT/kmeans/points file:///home/robert/stratosphere-0.5-SNAPSHOT/kmeans/centers file:///home/robert/stratosphere-0.5-SNAPSHOT/kmeans/result 10
+file:///tmp/stratosphere/kmeans/points file:///tmp/stratosphere/kmeans/centers file:///tmp/stratosphere/kmeans/result 20
 {% endhighlight %}
 	</div>
 </div>
@@ -136,7 +138,7 @@ For example:
 Use the <a href="{{site.baseurl}}/quickstart/example-data/plotPoints.py">Python Script</a> again to visualize the result
 
 {% highlight bash %}
-python2.7 plotPoints.py result/points result
+python2.7 plotPoints.py result result/points result
 {% endhighlight %}
 
 The following three pictures show the results for the sample input above. Play around with the parameters (number of iterations, number of clusters) to see how they affect the result.
@@ -155,10 +157,5 @@ The following three pictures show the results for the sample input above. Play a
 		<a data-lightbox="results" href="{{site.baseurl}}/img/quickstart-example/result015.png" data-lightbox="example-1"><img class="img-responsive" src="{{site.baseurl}}/img/quickstart-example/result015.png" /></a>
 	</div>
 </div>
-
-
-
-<!-- 1 file:///home/robert/Projekte/ozone/ozone/stratosphere-dist/target/stratosphere-dist-0.5-SNAPSHOT-bin/stratosphere-0.5-SNAPSHOT/kmeans/points file:///home/robert/Projekte/ozone/ozone/stratosphere-dist/target/stratosphere-dist-0.5-SNAPSHOT-bin/stratosphere-0.5-SNAPSHOT/kmeans/centers file:///home/robert/Projekte/ozone/ozone/stratosphere-dist/target/stratosphere-dist-0.5-SNAPSHOT-bin/stratosphere-0.5-SNAPSHOT/kmeans/result 10 -->
-
 
 </section>

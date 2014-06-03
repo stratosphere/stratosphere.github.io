@@ -72,7 +72,7 @@ $ wget -O hamlet.txt http://www.gutenberg.org/cache/epub/1787/pg1787.txt
 {% highlight bash %}
 $ bin/stratosphere run \
     --jarfile ./examples/stratosphere-java-examples-{{site.current_stable}}-WordCount.jar \
-    --arguments 1 file://`pwd`/hamlet.txt file://`pwd`/wordcount-result.txt
+    --arguments file://`pwd`/hamlet.txt file://`pwd`/wordcount-result.txt
 {% endhighlight %}
       You will find a file called <strong>wordcount-result.txt</strong> in your current directory.
   	</li>
@@ -122,7 +122,7 @@ jobmanager.rpc.address: 10.0.0.1
   <div class="page-header"><h2>Stratosphere on YARN</h2></div>
   <p class="lead">You can easily deploy Stratosphere on your existing <strong>YARN cluster</strong>. 
     <ol>
-    <li class="lead">Download the <strong>Stratosphere Uber-Jar</strong> YARN client:
+    <li class="lead">Download the <strong>Stratosphere YARN package</strong> with the YARN client:
       <div class="text-center" style="padding: 1em;">
       <a style="padding-left:10px" onclick="_gaq.push(['_trackEvent','Action','download-quickstart-yarn',this.href]);" class="btn btn-info btn-lg" href="{{site.current_stable_uberjar}}"><i class="icon-download"> </i> Stratosphere {{ site.current_stable }} for YARN</a>
       </div>
@@ -130,7 +130,7 @@ jobmanager.rpc.address: 10.0.0.1
     <li class="lead">Make sure your <strong>HADOOP_HOME</strong> (or <em>YARN_CONF_DIR</em> or <em>HADOOP_CONF_DIR</em>) <strong>environment variable</strong> is set to read your YARN and HDFS configuration.</li>
     <li class="lead">Run the <strong>YARN client</strong> with:
       <div class="text-center" style="padding:1em;">
-        <code>java -jar stratosphere-dist-0.4-yarn-uberjar.jar</code>
+        <code>./bin/yarn-session.sh</code>
       </div>
       
       You can run the client with options <code>-n 10 -tm 8192</code> to allocate 10 TaskManagers with 8GB of memory each.</li>
