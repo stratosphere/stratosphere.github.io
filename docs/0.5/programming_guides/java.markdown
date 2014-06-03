@@ -231,7 +231,7 @@ how you created the execution environment.
 Lazy Evaluation
 ---------------
 
-All Stratosphere programs are executed lazily: When the program's main method is executed, the data loading and transformations do not happen directly. Rather, each operation is created and added to the program's plan. The operations are actually executed when the one of the `execute()` methods is invoked on the ExecutionEnvironment object. Whether the program is executed locally or on a cluster depends on the environment of the program.
+All Stratosphere programs are executed lazily: When the program's main method is executed, the data loading and transformations do not happen directly. Rather, each operation is created and added to the program's plan. The operations are actually executed when one of the `execute()` methods is invoked on the ExecutionEnvironment object. Whether the program is executed locally or on a cluster depends on the environment of the program.
 
 The lazy evaluation lets you construct sophisticated programs that Stratosphere executes as one holistically planned unit.
 </section>
@@ -530,7 +530,7 @@ The following code shows how duplicate strings can be removed from a `DataSet` g
 
 ```java
 public class DistinctReduce
-         extends GroupReduceFunction<Tuple2<Integer, String>, Tuple2<Integer, String> {
+         extends GroupReduceFunction<Tuple2<Integer, String>, Tuple2<Integer, String>> {
   // Set to hold all unique strings of a group
   Set<String> uniqStrings = new HashSet<String>();
 
@@ -837,7 +837,7 @@ DataSet<Tuple4<Integer, String, Double, Byte>
 ```
 
 `projectFirst(int...)` and `projectSecond(int...)` select the fields of the first and second joined input that should be assembled into an output `Tuple`. The order of indexes defines the order of fields in the output tuple.
-The join projection works also for non-`Tuple` `DataSet`s. In this case, `projectFirst()` or `projectSecond()` must be called without arguments to add a joined element ot the output `Tuple`.
+The join projection works also for non-`Tuple` `DataSet`s. In this case, `projectFirst()` or `projectSecond()` must be called without arguments to add a joined element to the output `Tuple`.
 
 #### Join with DataSet Size Hint
 
@@ -1058,7 +1058,7 @@ DataSet<Tuple2<String, Double>> csvInput = env.readCsvFile("hdfs:///the/CSV/file
 	                       .types(String.class, Double.class);
 
 // create a set from some given elements
-DataSet<String> value = env.fromElements("Foo", "bar", foobar", "fubar");
+DataSet<String> value = env.fromElements("Foo", "bar", "foobar", "fubar");
 
 // generate a number sequence
 DataSet<Long> numbers = env.generateSequence(1, 10000000);
