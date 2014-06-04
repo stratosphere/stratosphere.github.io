@@ -9,17 +9,11 @@ Send us an email to <a href="mailto:contact@getstratosphere.org">contact@getstra
 
 ### Mailing List
 
-We have two mailing lists: one for **users** running Stratosphere and the other one for **developers**. You can ask questions by sending an email to one of the following adresses:
+Use the mailing list to ask any question.
 
-  - **Users**: stratosphere-users@googlegroups.com ([https://groups.google.com/forum/#!forum/stratosphere-users](https://groups.google.com/forum/#!forum/stratosphere-users))
-  - **Developers**: stratosphere-dev@googlegroups.com ([https://groups.google.com/forum/#!forum/stratosphere-dev/subscribe](https://groups.google.com/forum/#!forum/stratosphere-dev/subscribe))
-
-**The *users* list does not require signup to ask questions (just send an email), whereas the *dev* list does. Sign up by following the link to Google.**
-
-To **unsubscribe**, send an email to *stratosphere-users+unsubscribe@googlegroups.com* or *stratosphere-dev+unsubscribe@googlegroups.com* respectively.
+stratosphere-dev@googlegroups.com ([https://groups.google.com/forum/#!forum/stratosphere-dev/subscribe](https://groups.google.com/forum/#!forum/stratosphere-dev/subscribe))
 
 
-Use the *users* mailing list for all general questions, e.g. how to run the system or best development practices. Please report bugs in the *developer* mailing list.
 
 ### GitHub
 

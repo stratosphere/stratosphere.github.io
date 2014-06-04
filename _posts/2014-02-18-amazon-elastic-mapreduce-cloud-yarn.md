@@ -71,7 +71,7 @@ ssh hadoop@ec2-54-213-61-105.us-west-2.compute.amazonaws.com -i ~/Downloads/work
 {% endhighlight %}
 
 
-(Windows users have to follow <a href="ttp://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/emr-connect-master-node-ssh.html">these instructions</a> to SSH into the machine running the master.) </br></br>
+(Windows users have to follow <a href="http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/emr-connect-master-node-ssh.html">these instructions</a> to SSH into the machine running the master.) </br></br>
 Once connected to the master, download and start Stratosphere for YARN: 
 <ul>
 	<li>Download and extract Stratosphere-YARN</li>

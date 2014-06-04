@@ -335,7 +335,8 @@ priceSums.writeAsCsv(outputPath);
 
 </div>
 
-The <a href="https://github.com/stratosphere/stratosphere/blob/release-{{site.current_stable}}/stratosphere-examplesstratosphere-java-examples/src/main/java/eu/stratosphere/example/java/relational/RelationalQuery.java">Relational Query program</a> implements the above query. <br>
+
+The <a href="https://github.com/stratosphere/stratosphere/blob/release-{{site.current_stable}}/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/relational/RelationalQuery.java">Relational Query program</a> implements the above query. <br>
 It requires the following parameters to run: <code>&lt;orders input path&gt;, &lt;lineitem input path&gt;, &lt;output path&gt;</code>.<br>
 
 The orders and lineitem files can be generated using the [TPC-H benchmark](http://www.tpc.org/tpch/) suite's data generator tool (DBGEN). 
