@@ -93,7 +93,7 @@ An example of how to use Broadcast Variables in practice can be found in the <a 
 [<img src='img/SecurityCredentialsFirst.PNG' style='width: 100%;' title='Continue to Security Credentials 'Click on Security Credentials in the tab' />](img/SecurityCredentialsFirst.PNG)<br/><br/><br/>
  3. Click on Access Keys and create a new one.
 [<img src='img/SecurityCredentials.PNG' style='width: 100%;' title='Create new Acces Key' />](img/SecurityCredentials.PNG)<br/><br/><br/>
- 4. Save access key locally. <br/>
+ 4. Save access key locally if you need to use it later. Note: The access key is used internally by the EMR service. So it does not need to be downloaded. <br/>
 
 <br/><br/><br/><br/><br/>
 #### Creating an Elastic MapReduce Cluster
@@ -106,7 +106,7 @@ An example of how to use Broadcast Variables in practice can be found in the <a 
 1. Chose a name </br>
 2. Chose AMI version with at least Hadoop 2.2.0. AMI 3.0.3 (Hadoop 2.2.0) for example. <br/>
 3. Remove all applications which additionally will be installed. 
-  * Stratosphere does not need any additional applications installed. It runs on top of Hadoop Yarn and Hadoop Distributed File System.
+  * Stratosphere does not need any additional applications installed. It runs on top of Hadoop YARN and Hadoop Distributed File System.
 
 [<img src='img/SoftwareConfiguration.PNG' style='width: 100%;' title='Software Configuration' />](img/SoftwareConfiguration.PNG) <br/><br/><br/>
 4. Choose number and type of instances.
@@ -118,40 +118,42 @@ An example of how to use Broadcast Variables in practice can be found in the <a 
 [<img src='img/SecurityAndAccess.PNG' style='width: 100%;' title='Security and access configuration. Select your EC@ key pair.'/>](img/SecurityAndAccess.PNG)     
 
 <br/><br/><br/><br/><br/>
-#### Step 'Create bootstrap-action':
-1. Select bootstrap-action 'run-if'. <br/>
-2. Click 'Configure and add'. <br/>
-3. Copy 'instance.isMaster=true s3n://stratosphere-bootstrap/install-stratosphere-yarn.sh' into arguments. <br/>
- * This will run the Stratosphere installation on the master node. <br/>
-
-[<img src='img/BootstrapActionStratosphere.PNG' style='width: 100%;' title='Configure and add bootstrap action.' />](img/BootstrapActionStratosphere.PNG)<br/><br/><br/>
-4. Add bootstrap action.
-
-<br/><br/><br/><br/><br/>
 #### Step 'Create step to run stratosphere'
 1. Select step 'Custom jar'.
 2. Click 'Configure and add'.
 3. Copy 's3://elasticmapreduce/libs/script-runner/script-runner.jar' into Jar S3 Location
-Copy '/home/hadoop/start-stratosphere.sh -n 2 -j 1024 -t 1024' into arguments.
- * -n is the number of TaskManagers.
+Copy 's3n://stratosphere-bootstrap/installStart-stratosphere-yarn.sh -n 1 -j 1024 -t 1024' into arguments.
+ * -n is the number of TaskManagers. Should be the same number as the core instance count or less.
  * -j memory (heapspace) for the JobManager.
  * -t memory for the TaskManagers.
 
-[<img src='img/StepsRunStratosphere.PNG' style='width: 100%;' title='Configure and add step' />](img/StepsRunStratosphere.PNG)<br/><br/><br/>
-4. Add step.
+[<img src='img/StepStartStratosphere.png' style='width: 100%;' title='Configure and add step' />](img/StepStartStratosphere.png.PNG)<br/><br/><br/>
+4. Save step.
 
 <br/><br/><br/><br/><br/>
 #### Create cluster and reuse it
 * Click create cluster to start the Amazon instances and install Stratosphere on them. 
 * It will take some time until Stratosphere is started, the completed installation step will indicate that Stratosphere is running.
-* Use "Master public DNS":9046 to access the YARN interface. To access on port 9046, the EMR master security group (under EC2) needs to allow access on port 9046. For more information [read here](http://docs.aws.amazon.com/gettingstarted/latest/wah/getting-started-security-group.html).
+* Use {Master public DNS}:9026 to access the YARN interface. To access on port 9026, the EMR master Security Group (under EC2 -> NETWORK & SECURITY-> Security Groups. It is normally called: 'ElasticMapReduce-master') needs to allow access on port 9026. For more information on how to allow access to your instances, [read here](http://docs.aws.amazon.com/gettingstarted/latest/wah/getting-started-security-group.html).
 * The settings can be copied by cloning this cluster. This cluster can be reused as a template for a configured and running Stratosphere cluster. 
 
 [<img src='img/StepCompleted.PNG' style='width: 100%;' title='Running stratosphere'/>](img/StepCompleted.PNG) 
 
+<br/><br/><br/><br/><br/>
+#### Accessing Your Stratosphere Interface
+* You need to allow access to your master on TCP port 9026 and 9046 from outside
+* First access your YARN interface by typing into your browser '{Master public DNS}:9026'. Replace {Master public DNS} with the actual master public DNS or public IP. You can find it at the top of your cluster summary.
+* Copy the ID of the running Stratosphere application
 
-###### Accessing Stratosphere Interface
-* The Yarn interface and Stratopshere interface will be up. [This tutorial (Step 4)](http://stratosphere.eu/blog/tutorial/2014/02/18/amazon-elastic-mapreduce-cloud-yarn.html) shows how to get access to both interfaces.
+[<img src='img/YarnApplication.png' style='width: 100%;' title='Configure and add step' />](img/YarnApplication.png)
+
+* Type into your browser '{Master public DNS}:9046/proxy/{Stratospher Apllication ID}/index.html'. Replace {Stratospher Apllication ID} with the application ID which can be find on the YARN web interface.
+* You now see the Stratosphere Dashboard.
+
+[<img src='img/StratosphereInterfaceProxy.png' style='width: 100%;' title='Configure and add step' />](img/StratosphereInterfaceProxy.png)
+
+
+* Stratosphere is running!
 
 <br/><br/><br/><br/><br/>
 #### Troubleshoot - What to do when something went wrong?:
