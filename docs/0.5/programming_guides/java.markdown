@@ -957,7 +957,7 @@ Similar to Reduce, GroupReduce, and Join, keys can be defined using
 
 ```java
 // Some CoGroupFunction definition
-public class MyCoGrouper
+class MyCoGrouper
          extends CoGroupFunction<Tuple2<String, Integer>, Tuple2<String, Double>, Double> {
   // set to hold unique Integer values
   Set<Integer> ints = new HashSet<Integer>();
@@ -990,7 +990,7 @@ DataSet<Double> output = iVals.coGroup(dVals)
                          // group second DataSet on first tuple field
                          .equalTo(0)
                          // apply CoGroup function on each pair of groups
-                         .reduceGroup(new MyCoGrouper());
+                         .with(new MyCoGrouper());
 ```
 
 #### CoGroup on DataSets grouped by Key Selector Function
