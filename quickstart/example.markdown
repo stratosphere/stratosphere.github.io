@@ -39,6 +39,8 @@ KMeansDataGenerator <numberOfDataPoints> <numberOfClusterCenters> [<relative std
 {% endhighlight %}
 The <i>relative standard deviation</i> is an interesting tuning parameter: it determines the closeness of the points to the centers.
 <p>The <code>kmeans/</code> directory should now contain two files: <code>centers</code> and <code>points</code>.</p>
+<p>If not then you could simply copy the two files using the path provided after running the java command.</p>
+<a data-lightbox="inputfiles" href="{{site.baseurl}}/img/quickstart-example/points_centers_path.png" data-lightbox="input"><img class="img-responsive" src="{{site.baseurl}}/img/quickstart-example/points_centers_path.png" /></a>
 
 
 <h2>Review Input Data</h2>
@@ -49,6 +51,8 @@ python2.7 plotPoints.py points points input
 
 
 Note: You might have to install <a href="http://matplotlib.org/">matplotlib</a> (<code>python-matplotlib</code> package on Ubuntu) to use the Python script.
+
+In some cases even after having installed Matplotlib, you might still be  promped with an ImportError <code>No module named matplotlib.pyplot</code>. Very often this is due to having many python versions existing independently on your system. (for instance, you might have installed python more than once each time using a different approach). A suggested solution would be to completely re-install Python. (that way the system would now have one clear location to access.) You may then proceed by installing the scientific Python environment: <i>numpy</i> (preferably first), <i>scipy</i> and <i>matplotlib</i>.  
 
 
 The following overview presents the impact of the different standard deviations on the input data.
