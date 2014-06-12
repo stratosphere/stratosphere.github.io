@@ -23,13 +23,13 @@ links:
   <p>Stratosphere contains a data generator for K-Means.</p>
   {% highlight bash %}
 # Download Stratosphere
-wget {{ site.current_stable }}
+wget {{ site.current_stable_dl }}
 tar xzf stratosphere-*.tgz 
-cd stratosphere
+cd stratosphere-*
 mkdir kmeans
 cd kmeans
 # run data generator
-java -cp  ../examples/stratosphere-java-examples-0.5-KMeans.jar eu.stratosphere.example.java.clustering.util.KMeansDataGenerator 500 10 0.08
+java -cp  ../examples/stratosphere-java-examples-{{ site.current_stable }}-KMeans.jar eu.stratosphere.example.java.clustering.util.KMeansDataGenerator 500 10 0.08
 cp /tmp/points .
 cp /tmp/centers .
   {% endhighlight %}
