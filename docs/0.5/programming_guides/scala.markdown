@@ -726,9 +726,20 @@ can check out the complete code in our KMeans example.
 
 #### Delta Iteration
 
-This is tad bit prototypical right now. Please contact us through one of the
-channels [here](http://stratosphere.eu/contact/) if you are interested in
-working with it.
+The signature of the delta iterate method is this:
+
+```scala
+def iterateWithDelta(workset: DataSet[W], solutionSetKey: A => K, stepFunction: (DataSet[A], DataSet[W]) => (DataSet[A], DataSet[W]), maxIterations: Int)
+```
+
+where `A` is the type of the `DataSet` on which `iterateWithDelta` is called,
+`W` is the type of the `DataSet` that represents the workset and `K` is the
+key type. The maximum number of iterations must always be given.
+
+For information on how delta iterations in general work on our system, please
+refer to [iterations](iterations.html). A working example job is
+available here:
+[Scala Connected Components Example](examples_scala.html#connected_components) 
 
 
 <section id="data-sinks">
