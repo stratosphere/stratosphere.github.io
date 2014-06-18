@@ -99,7 +99,7 @@ examples/stratosphere-java-examples-0.5-SNAPSHOT-KMeansIterative.jar
 		3. Select it in the left box to see how the operators in the plan are connected to each other. <br>
 		4. Enter the arguments in the lower left box:
 {% highlight bash %}
-1 file://<pathToGenerated>points file://<pathToGenerated>centers file://<pathToGenerated>result 10
+file://<pathToGenerated>points file://<pathToGenerated>centers file://<pathToGenerated>result 10
 {% endhighlight %}
 For example:
 {% highlight bash %}
@@ -138,7 +138,7 @@ file:///tmp/stratosphere/kmeans/points file:///tmp/stratosphere/kmeans/centers f
 Use the <a href="{{site.baseurl}}/quickstart/example-data/plotPoints.py">Python Script</a> again to visualize the result
 
 {% highlight bash %}
-python2.7 plotPoints.py result result/points result
+python2.7 plotPoints.py result result result-pdf
 {% endhighlight %}
 
 The following three pictures show the results for the sample input above. Play around with the parameters (number of iterations, number of clusters) to see how they affect the result.
