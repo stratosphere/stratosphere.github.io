@@ -3,7 +3,7 @@ layout: inner_docs_v05
 title:  "Frequently Asked Questions (FAQ)"
 questions: 
   - {section: "true", anchor: "general", title: "General"}
-  - {anchor: "stratosphere_hadoop_project", title: "Is Stratosphere a Hadoop Project?"}
+  - {anchor: "stratosphere_hadoop_project", title: "Is Stratosphere a Hadoop Add-on?"}
   - {anchor: "stratosphere_hadoop_req", title: "Do I have to install Apache Hadoop to use Stratosphere?"}
   - {section: "true", anchor: "usage", title: "Usage"}
   - {anchor: "usage_progress", title: "How do I assess the progress of a Stratosphere program?"}
@@ -41,9 +41,9 @@ questions:
 <div class="page-header"><h2>General</h2></div>
 
 <section id="stratosphere_hadoop_project">
-### Is Stratosphere a Hadoop Project?
+### Is Stratosphere a Hadoop Add-on?
 
-Stratosphere is a data processing system and an alternative to Hadoop's MapReduce component. It comes with its own runtime, rather than building on top of MapReduce. As such, it can work completely independently of the Hadoop ecosystem. However, Stratosphere can also access Hadoop's distributed file system (HDFS) to read and write data, and Hadoop's next-generation resource manager (YARN) to provision cluster resources. Since most Stratosphere users are using Hadoop HDFS to store their data, we ship already the required libraries to access HDFS.
+No, Stratosphere is a data processing system and an alternative to Hadoop's MapReduce component. Stratosphere contains its own compute engine, and it does not run on top of Hadoop MapReduce. As such, it can work completely independently of the Hadoop ecosystem. However, Stratosphere can also access Hadoop's distributed file system (HDFS) to read and write data, and Hadoop's next-generation resource manager (YARN) to provision cluster resources. Since most Stratosphere users are using Hadoop HDFS to store their data, we ship already the required libraries to access HDFS.
 </section>
 
 <section id="stratosphere_hadoop_req">
@@ -273,7 +273,7 @@ Stratosphere creates a `.stratosphere/` directory in the users home directory wh
 <section id="features_fault_tolerance">
 ### What kind of fault-tolerance does Stratosphere provide?
 
-Stratospere can restart failed jobs. Mid-query fault tolerance will go into the open source project in the next versions.
+Stratospere can restart failed jobs. Mid-query fault tolerance is under development and will be available in the next versions.
 </section>
 
 <section id="features_hadoop">
