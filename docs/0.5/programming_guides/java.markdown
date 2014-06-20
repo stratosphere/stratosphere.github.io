@@ -27,7 +27,7 @@ Java API
 Introduction
 ------------
 
-Analysis programs in Stratosphere are regular Java programs that implement transformations on data sets (e.g., filtering, mapping, joining, grouping). The data sets are initially created from certain sources (e.g., by reading files, or from collections). Results are returned via sinks, which may for example write the data to (distributed) files, or to standard output (for example the command line terminal). Stratosphere programs run in a variety of contexts, standalone, or embedded in other programs. The execution can happen in a local JVM, or on clusters of many machines.
+Stratosphere Java API programs are regular Java programs that implement transformations on data sets (e.g., filtering, mapping, joining, grouping). The data sets are initially created from certain sources (e.g., by reading files, or from collections). Results are returned via sinks, which may for example write the data to (distributed) files, or to standard output (for example the command line terminal). Stratosphere programs run in a variety of contexts, standalone, or embedded in other programs. The execution can happen in a local JVM, or on clusters of many machines.
 
 In order to create your own Stratosphere program, we encourage you to start with the [program skeleton](#skeleton) and gradually add your own [transformations](#transformations). The remaining sections act as references for additional operations and advanced features.
 </section>
@@ -134,7 +134,7 @@ programs with a `main()` method. Each program consists of the same basic parts:
 4. Specify where to put the results of your computations, and
 5. Execute your program.
 
-We will now give an overview of each of those steps but please refer
+This section gives an overview of the above steps. Please refer
 to the respective sections for more details. Note that all [core classes
 of the Java API](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-java/src/main/java/eu/stratosphere/api/java) are found in the package `eu.stratosphere.api.java`.
 
@@ -208,17 +208,20 @@ write(FileOutputFormat<T> outputFormat, String filePath)
 print()
 ```
 
-The last method is only useful for developing/debugging on a local machine,
-it will output the contents of the `DataSet` to standard output. (Note that in
-a cluster, the result goes to the standard out stream of the cluster nodes and ends
-up in the *.out* files of the workers).
-The first two do as the name suggests, the third one can be used to specify a
-custom data output format. Keep in mind, that these calls do not actually
-write to a file yet. Only when your program is completely specified and you
-call the `execute` method on your `ExecutionEnvironment` are all the
-transformations executed and is data written to disk. Please refer
-to [Data Sinks](#data_sinks) for more information on writing to files and also
-about custom data output formats.
+Method `print` is only useful for developing/debugging on a local
+machine, it will output the contents of the `DataSet` to standard
+output. (Note that in a cluster, the result goes to the standard out
+stream of the cluster nodes and ends up in the *.out* files of the
+workers).
+
+Methods `writeAsText` and `writeAsCsv` do as the name suggests, the
+third one can be used to specify a custom data output format. Keep in
+mind, that these calls do not actually write to a file yet. Only when
+your program is completely specified and you call the `execute` method
+on your `ExecutionEnvironment` are all the transformations executed
+and is data written to disk. Please refer to [Data Sinks](#data_sinks)
+for more information on writing to files and also about custom data
+output formats.
 
 Once you specified the complete program you need to call `execute` on
 the `ExecutionEnvironment`. This will either execute on your local
@@ -233,7 +236,7 @@ Lazy Evaluation
 
 All Stratosphere programs are executed lazily: When the program's main method is executed, the data loading and transformations do not happen directly. Rather, each operation is created and added to the program's plan. The operations are actually executed when one of the `execute()` methods is invoked on the ExecutionEnvironment object. Whether the program is executed locally or on a cluster depends on the environment of the program.
 
-The lazy evaluation lets you construct sophisticated programs that Stratosphere executes as one holistically planned unit.
+Lazy evaluation lets you construct sophisticated programs that Stratosphere executes as one holistically planned unit.
 </section>
 
 <section id="types">
@@ -337,12 +340,12 @@ wordCounts
     .reduce(new MyReduceFunction());
 ```
 
-In order to access fields more intuitively and to generate more readable code, it is also possible to extend a subclass of `Tuple`. You can add getters and setters with custom names that delegate to the field positions. See this [example](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/relational/TPCHQuery3.java) for an illustration how to make use of that mechanism.
+In order to access fields more intuitively and to generate more readable code, it sometime helpful to extend a subclass of `Tuple`. You can add getters and setters with custom names that delegate to the field positions. See this [example](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-examples/stratosphere-java-examples/src/main/java/eu/stratosphere/example/java/relational/TPCHQuery3.java) for an illustration how to make use of that mechanism.
 
 
 #### Values
 
-*Value* types describe their serialization and deserialization manually. Instead of going through a general purpose serialization framework, they provide custom code for those operations by means implementing the `eu.stratosphere.types.Value` interface with the methods `read` and `write`. Using a *Value* type is reasonable when general purpose serialization would be highly inefficient. An example would be a data type that implements a sparse vector of elements as an array. Knowing that the array is mostly zero, one can use a special encoding for the non-zero elements, while the general purpose serialization would simply write all array elements.
+*Value* types describe their serialization and deserialization manually. Instead of going through a general purpose serialization framework, they provide custom code for those operations by means of implementing the `eu.stratosphere.types.Value` interface with the methods `read` and `write`. Using a *Value* type is reasonable when general purpose serialization would be highly inefficient. An example would be a data type that implements a sparse vector of elements as an array. Knowing that the array is mostly zero, one can use a special encoding for the non-zero elements, while the general purpose serialization would simply write all array elements.
 
 The `eu.stratosphere.types.CopyableValue` interface supports manual internal cloning logic in a similar way.
 
@@ -397,8 +400,10 @@ DataSet<Integer> intSums = intPairs.map(new IntAdder());
 
 ### FlatMap
 
-The FlatMap transformation applies a user-defined `FlatMapFunction` on each element of a `DataSet`.
-This variant of a map function can return arbitrary many result elements (including none) for each input element.
+The FlatMap transformation applies a user-defined `FlatMapFunction` on
+each element of a `DataSet`.  This operator can return arbitrary many
+result elements (as well as no results) for each input
+element. Results are accumulated to be returned via the `collect` method.
 
 The following code transforms a `DataSet` of text lines into a `DataSet` of words:
 
@@ -457,13 +462,14 @@ DataSet<Tuple2<String, Integer>> out = in.project(2,0).types(String.class, Integ
 
 ### Transformations on grouped DataSet
 
-The reduce operations can operate on grouped data sets. Specifying the key to
-be used for grouping can be done in two ways:
+Some transformations that accept as input several elements of a
+DataSet require grouping. A DataSet can be grouped using the `groupBy`
+operator that takes as input either:
 
 - a `KeySelector` function or
 - one or more field position keys (`Tuple` `DataSet` only).
 
-Please look at the reduce examples to see how the grouping keys are specified.
+Please look at the reduce examples below to see how the grouping keys are specified.
 
 ### Reduce on grouped DataSet
 
@@ -566,7 +572,14 @@ DataSet<Tuple2<Integer, String>> output =
                                  .reduceGroup(new DistinctReduce());
 ```
 
-**Note:** Stratosphere internally works a lot with mutable objects. Collecting objects like in the above example only works because Strings are immutable in Java!
+**Warning:** The `Iterator` object in the example is an one-pass
+  iterator over mutable objects. One-pass means that there is no
+  `rewind` method. Mutable objects means that every call to
+  `in.next()` will return the same object reference, with the contents
+  of this reference changed. Collecting the results of `next()` calls
+  as done in the above example only works because Strings are
+  immutable in Java. In general, you need to make a copy of the result
+  of the `next` call and collect the copy in a data structure.
 
 #### GroupReduce on DataSet grouped by KeySelector Function
 
@@ -616,7 +629,10 @@ DataSet<Double> output = input
                          .reduceGroup(new DistinctReduce());
 ```
 
-**Note:** A GroupSort often comes for free if the grouping is established using a sort-based execution strategy of an operator before the reduce operation.
+**Note:** Every call to `sortGroup` does not necessarily imply that
+  the data will be actually sorted. Often, sorting comes for free if
+  if the grouping is established using a sort-based execution strategy
+  of an operator before the reduce operation.
 
 #### Combinable GroupReduceFunctions
 
@@ -867,7 +883,7 @@ DataSet<Tuple2<Tuple2<Integer, String>, Tuple2<Integer, String>>>
 The Cross transformation combines two `DataSet`s into one `DataSet`. It builds all pairwise combinations of the elements of both input `DataSet`s, i.e., it builds a Cartesian product.
 The Cross transformation either calls a user-defined `CrossFunction` on each pair of elements or applies a projection. Both modes are shown in the following.
 
-**Note:** Cross is potentially a *very* compute-intensive operation which can challenge even large compute clusters!
+**Warning:** Cross is potentially a *very* compute-intensive operation which can challenge even large compute clusters!
 
 #### Cross with User-Defined Function
 
@@ -945,8 +961,10 @@ DataSet<Tuple3<Integer, Integer, String>>
 
 ### CoGroup
 
-The CoGroup transformation jointly processes groups of two `DataSet`s. Both `DataSet`s are grouped on a defined key and groups of both `DataSet`s that share the same key are handed together to a user-defined `CoGroupFunction`. If for a specific key only one `DataSet` has a group, the `CoGroupFunction` is called with this group and an empty group.
+The CoGroup transformation jointly processes groups of two `DataSet`s. Both `DataSet`s are grouped on a defined key and the two groups of the two `DataSet`s with a given key are handed to the same call of a user-defined `CoGroupFunction`. If only one `DataSet` contains elements for one key, the `CoGroupFunction` is called with an empty group from the other `DataSet`.
 A `CoGroupFunction` can separately iterate over the elements of both groups and return an arbitrary number of result elements.
+
+**Note**: Nesting the while loops over the contents of the two `Iterator`s will not work! The contents of each `Iterator` can be consumed exactly once.
 
 Similar to Reduce, GroupReduce, and Join, keys can be defined using
 
@@ -1000,7 +1018,7 @@ Works analogous to key selector functions in Join transformations.
 ### Union
 
 Produces the union of two `DataSet`s, which have to be of the same type. A union of more than two `DataSet`s can be implemented with multiple union calls, as shown here:
-
+	 
 ```java
 DataSet<Tuple2<String, Integer>> vals1 = // [...]
 DataSet<Tuple2<String, Integer>> vals2 = // [...]
@@ -1009,6 +1027,7 @@ DataSet<Tuple2<String, Integer>> unioned = vals1.union(vals2)
                     .union(vals3);
 ```
 
+**Note:** This is a bag union operator that does not remove duplicates.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -1017,7 +1036,7 @@ DataSet<Tuple2<String, Integer>> unioned = vals1.union(vals2)
 Data Sources
 ------------
 
-Data sources create the initial data sets, such as from files or from Java collections. The general mechanism of of creating data sets is abstracted behind an [InputFormat](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-core/src/main/java/eu/stratosphere/api/common/io/InputFormat.java). Stratosphere comes with several built-in formats to create data sets from common file formats. Many of them have shortcut methods on the *ExecutionEnvironment*.
+Data sources create the `DataSet`s, from files or from Java collections. The general mechanism of of creating `DataSet`s is abstracted behind an [InputFormat](https://github.com/stratosphere/stratosphere/blob/{{ site.docs_05_stable_gh_tag }}/stratosphere-core/src/main/java/eu/stratosphere/api/common/io/InputFormat.java). Stratosphere comes with several built-in formats to create data sets from common file formats. Many of them have shortcut methods on the *ExecutionEnvironment*.
 
 File-based:
 
@@ -1075,9 +1094,9 @@ DataSet<Tuple2<String, Integer> dbData =
       // specify type information for DataSet
       new TupleTypeInfo(Tuple2.class, STRING_TYPE_INFO, INT_TYPE_INFO)
     );
-
-// Note: Stratosphere's program compiler needs to infer the data types of the data items which are returned by an InputFormat. If this information cannot be automatically inferred, it is necessary to manually provide the type information as shown in the examples above.
 ```
+
+**Note:** Stratosphere's program compiler needs to infer the data types of the data items which are returned by an InputFormat. If this information cannot be automatically inferred, it is necessary to manually provide the type information as shown in the examples above.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -1145,10 +1164,8 @@ myResult.output(
 Debugging
 ---------
 
-Before running a data analysis program on a large data set in a distributed cluster, it is a good idea to make sure that the implemented algorithm works as desired. Hence, implementing data analysis programs is usually an incremental process of checking results, debugging, and improving. 
-
 <p>
-Stratosphere provides a few nice features to significantly ease the development process of data analysis programs by supporting local debugging from within an IDE, injection of test data, and collection of result data. This section give some hints how to ease the development of Stratosphere programs.
+Stratosphere provides features to ease the development process of data analysis programs by supporting local execution from within an IDE (which allows attaching a debugger), injection of test data, and collection of result data. This section give some hints how to ease the development of Stratosphere programs.
 </p>
 
 ### Local Execution Environment
@@ -1207,6 +1224,16 @@ myResult.output(new LocalCollectionOutputFormat(outData));
 
 **Note:** Collection data sources will only work correctly, if the whole program is executed in the same JVM!
 
+<p>
+You can print a `DataSet` in the standard output. This creates a `DataSink` under the covers
+</p>
+
+```
+DataSet<Tuple2<String, Integer>> myResult = ...
+
+myResult.print()
+```
+
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
 
@@ -1214,7 +1241,7 @@ myResult.output(new LocalCollectionOutputFormat(outData));
 Iteration Operators
 -------------------
 
-Iterations implement loops in Stratosphere programs. The iteration operators encapsulate a part of the program and execute it repeatedly, feeding back the result of one iteration (the partial solution) into the next iteration. There are two types of iterations in Stratosphere: **BulkIteration** and **DeltaIteration**.
+Iteration operators represent loops over `DataSet`s in Stratosphere programs. The iteration operators encapsulate a part of the program and execute it repeatedly, feeding back the result of one iteration (called partial solution) into the next iteration. There are two types of iterations in Stratosphere: **BulkIteration** and **DeltaIteration**.
 
 This section provides quick examples on how to use both operators. Check out the [Introduction to Iterations]({{site.baseurl}}/docs/0.5/programming_guides/iterations.html) page for a more detailed introduction.
 
@@ -1259,7 +1286,7 @@ You can also check out the [K-Means example](https://github.com/stratosphere/str
 
 #### Delta Iterations
 
-Delta iterations exploit the fact that certain algorithms do not change every data point of the solution in each iteration.
+Delta iterations encapsulate functionality that exploits the fact that certain algorithms do not change every data point of the partial solution in each iteration.
 
 In addition to the partial solution that is fed back (called workset) in every iteration, delta iterations maintain state across iterations (called solution set), which can be updated through deltas. The result of the iterative computation is the state after the last iteration. Please refer to the [Introduction to Iterations]({{site.baseurl}}/docs/0.5/programming_guides/iterations.html) for an overview of the basic principle of delta iterations.
 
@@ -1305,7 +1332,24 @@ iteration.closeWith(deltas, nextWorkset)
 Semantic Annotations
 -----------
 
-Semantic Annotations give hints about the behavior of a function by telling the system which fields in the input are accessed and which are constant between input and output data of a function (copied but not modified). Semantic annotations are a powerful means to speed up execution, because they allow the system to reason about reusing sort orders or partitions across multiple operations. Using semantic annotations may eventually save the program from unnecessary data shuffling or unnecessary sorts.
+Semantic Annotations give hints about the behavior of a function by
+telling the system which fields in the input are **constant** between
+input and output data of a function. A constant field is a field of
+the input that is included in the output of the user-defined function
+**unchanged**. Semantic annotations are a powerful means to speed up
+execution, because they allow the system to reason about reusing sort
+orders or partitions across multiple operations. Using semantic
+annotations may eventually save the program from unnecessary data
+shuffling or unnecessary sorts. 
+
+**Warning:** With great power comes great responsibility: wrong
+  annotations can lead to incorrect program results! As a rule of
+  thumb, be conservative when providing annotations. Only annotate
+  fields, when they are always constant for every possible call of the
+  function. Otherwise the system has incorrect assumptions about the
+  execution and the execution may produce wrong results. If the
+  behavior of the operator is not clearly predictable, no annotation
+  should be provided.
 
 Semantic annotations can be attached to functions through Java annotations, or passed as arguments when invoking a function on a DataSet. The following example illustrates that:
 
@@ -1322,11 +1366,11 @@ public class DivideFirstbyTwo extends MapFunction<Tuple2<Integer, Integer>, Tupl
 
 The following annotations are currently available:
 
-* `@ConstantFields`: Declares constant fields (forwarded/copied) for functions with a single input data set (Map, Reduce, Filter, ...).
+* `@ConstantFields`: Declares constant fields for functions with a single input data set (Map, Reduce, Filter, ...).
 
-* `@ConstantFieldsFirst`: Declares constant fields (forwarded/copied) for functions with a two input data sets (Join, CoGroup, ...), with respect to the first input data set.
+* `@ConstantFieldsFirst`: Declares constant fields for functions with a two input data sets (Join, CoGroup, ...), with respect to the first input data set.
 
-* `@ConstantFieldsSecond`: Declares constant fields (forwarded/copied) for functions with a two input data sets (Join, CoGroup, ...), with respect to the first second data set.
+* `@ConstantFieldsSecond`: Declares constant fields for functions with a two input data sets (Join, CoGroup, ...), with respect to the first second data set.
 
 * `@ConstantFieldsExcept`: Declares that all fields are constant, except for the specified fields. Applicable to functions with a single input data set.
 
@@ -1334,9 +1378,7 @@ The following annotations are currently available:
 
 * `@ConstantFieldsSecondExcept`: Declares that all fields of the second input are constant, except for the specified fields. Applicable to functions with a two input data sets.
 
-*(Note: The system currently evaluated annotations only on Tuple data types. This will be extended in the next versions)*
-
-**Note**: It is important to be conservative when providing annotations. Only annotate fields, when they are always constant for every call to the function. Otherwise the system has incorrect assumptions about the execution and the execution may produce wrong results. If the behavior of the operator is not clearly predictable, no annotation should be provided.
+**Note:** Currently, only annotations on Tuple DataSets are considered by Stratosphere. This will be extended in the next versions.
 
 <div class="back-to-top"><a href="#toc">Back to top</a></div>
 </section>
@@ -1346,7 +1388,7 @@ Broadcast Variables
 -------------------
 
 Broadcast variables allow you to make a data set available to all parallel instances of an operation, in addition to the regular input of the operation. This is useful
-for auxiliary data sets, or data-dependent parameterization. The data set will then be accessible at the operator as an `Collection<T>`.
+for auxiliary data sets, or data-dependent parameterization. The data set will then be accessible at the operator as a `Collection<T>`.
 
 - **Broadcast**: broadcast sets are registered by name via `withBroadcastSet(DataSet, String)`, and
 - **Access**: accessible via `getRuntimeContext().getBroadcastVariable(String)` at the target operator.
