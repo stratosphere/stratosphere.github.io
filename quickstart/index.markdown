@@ -1,4 +1,4 @@
---- 
+---
 layout: inner_simple
 title: Quick Start - Overview
 description: Getting started with a Stratosphere in just a few minutes.

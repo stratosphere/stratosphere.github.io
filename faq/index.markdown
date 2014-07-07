@@ -1,4 +1,4 @@
---- 
+---
 layout: inner_faq
 title: Frequently Asked Questions (FAQ)
 description: Frequently Asked Questions for the Stratosphere system.

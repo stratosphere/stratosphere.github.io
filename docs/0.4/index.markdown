@@ -1,4 +1,4 @@
---- 
+---
 layout: inner_docs_v04
 title: "Documentation (0.4)"
 description: Documentation for the Stratosphere Big Data Analytics platform.

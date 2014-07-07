@@ -1,4 +1,4 @@
---- 
+---
 layout: inner_with_sidebar
 title: "Quick Start: Stratosphere K-Means Example"
 description: Run an example Stratosphere Program

@@ -1,4 +1,4 @@
---- 
+---
 layout: inner_simple
 title: Quick Start - Build
 description: Learn to build Stratosphere.

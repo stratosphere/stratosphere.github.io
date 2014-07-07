@@ -1,4 +1,4 @@
---- 
+---
 layout: inner_docs
 title: Meteor Query Language
 sublinks:

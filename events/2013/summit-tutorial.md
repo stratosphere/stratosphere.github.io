@@ -1,4 +1,4 @@
---- 
+---
 layout: inner_complex
 title:  "Summit 2013: Hands-on Session"
 links: 

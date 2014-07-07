@@ -1,4 +1,4 @@
---- 
+---
 layout: inner_text
 title: Legal 
 ---
