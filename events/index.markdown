@@ -14,7 +14,6 @@ links:
   -       { anchor: "upcoming", title: "Upcoming"}
 
 
-
 </section> -->
 
 <section id="2014">
@@ -35,3 +34,5 @@ links:
 - [Stratosphere Summit]({{site.baseurl}}/events/2013/summit.html) (Nov. 14-15th)
 
 </section>
+
+
