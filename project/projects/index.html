@@ -1,0 +1,27 @@
+---
+layout: inner_with_sidebar
+title: Projects 
+description: Research topics within the Stratosphere project.
+keywords: stratosphere, research project, big data, data analytics
+links: 
+  -       { anchor: profiling, title: "Distributed Data Profiling" }
+---
+
+<!--   -       { anchor: affiliated-faculty, title: "Affiliated Faculty" }  
+  -       { anchor: affiliated-associates, title: "Affiliated Research Associates" } -->
+
+In order to fulfil its main goal, namely advancing the state of the art distributed, fault-tolerant, and adaptive data processing, the Stratosphere project covers a broad range of research topics, starting from fundamental concerns like fault tolerance, over flexible programming models for distributed computations, to concrete use-cases on top of distributed systems like focussed crawling. This page gives an overview of the different subprojects of Stratosphere.
+
+
+<section id="profiling">
+<h3>Distributed Data Profiling</h2>
+
+<p>
+<i><b>Research associate:</b> Sebastian Kruse</i>
+</p>
+
+<p>
+Data profiling is the task of extracting metadata from databases. It is an important prerequisite to a lot of common data management tasks like data integration, schema redesign, and data cleansing. While the calculation of simple types of metadata such as the minimum and maximum value of a data attribute is relatively simple, it is incomparibly harder to obtain more complex metadata like functional dependencies. In fact, many of dependency discovery problems are subject to an exponentially growing search space, leading to extremely time- and space-demanding calculations - or even to infeasibility. In addition, real-world data are ever-growing. To this end, we want to leverage the opportunities of distributed computation platforms, e.g. resource scalability, to enable data profiling even on very large datasets. However, in contrast to previous research, our algorithms need to be designed for scale-out, which brings up a lot of new challenges, e.g., the lack of shared state and complex control flow handling.
+</p>
+
+</section>
