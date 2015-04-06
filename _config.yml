@@ -1,6 +1,6 @@
 name:               "Stratosphere | Next Generation Big Data Processing"
 markdown:           redcarpet
-highlighter:           true
+highlighter:        pygments
 timezone:           "Europe/Berlin"
 safe:               true
 lsi:                false
